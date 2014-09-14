@@ -28,7 +28,7 @@
   (GL11/glLoadIdentity)
   (GLU/gluPerspective (float 45.0) ;; fovy
                       (/ (float WIDTH) (float HEIGHT)) ;; aspect
-                      (float 1.0)     ;; zNear
+                      (float 0.1)     ;; zNear
                       (float 100.0))  ;; zFar
   (GL11/glMatrixMode GL11/GL_MODELVIEW)
   (GL11/glLoadIdentity)
