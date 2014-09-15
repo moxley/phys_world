@@ -29,24 +29,50 @@
       (is (@test-state :left-key-callback-called) true)
       (is (= (@test-state :left-key-up-called) nil)))))
 
-;; TODO
-;;(deftest record-keyboard-events-test
-;;  (testing "Keyboard events are recorded to @keyboard-events"
-;;    (let [events [{:key :left :down? true}]]
-;;      (logic/record-keyboard-events [events])
-;;      (is (= @keyboard-events [{:left {:down? true}}])))))
+(deftest listener-matches-event?-test
+  (let [listener {:key :left :down? true}
+        event {:key :left :down? true}
+        prev-state {:right true}]
+    (testing "Returns listener matching event when not found in prev-state"
+      (is (= (logic/listener-matches-event? listener event prev-state) listener)))
+    (testing "Returns false when matches event, but found in prev-state"
+      (is (= (logic/listener-matches-event? listener event {:left true}) false)))))
 
-(deftest filtered-events-test
-  (let [pattern {:key :left :down? true}
-        matching-event {:key :left :down? true :name :matching-event}
-        non-matching-event-1 {:key :right :down? true :name :non-matching-event-1}
-        non-matching-event-2 {:key :left :down? false :name :non-matching-event-2}
-        events [non-matching-event-1 matching-event non-matching-event-2]]
-    (testing "Returns empty seq for empty events"
-      (is (= (logic/filtered-events pattern []) [])))
-    (testing "Returns empty seq for empty pattern"
-      (is (= (logic/filtered-events {} events) [])))
-    (testing "Returns events matching pattern"
-      (is (= (logic/filtered-events pattern events) [matching-event])))))
+(deftest listeners-for-event-test
+  (let [event {:key :left :down? true}
+        listener {:key :left :down? true :repeating? false}
+        listeners [listener]
+        prev-state {:right true}]
+    (testing "Returns listener matching event"
+      (is (= (logic/listeners-for-event event listeners prev-state) [listener])))
+    (testing "Does not return matching listener if key found in prev-state"
+      (is (= (logic/listeners-for-event event listeners {:left true}) [])))))
 
-(filtered-events-test)
+(deftest events-with-listeners-test
+  (let [event {:key :left :down? true}
+        events [{:key :right :down? true}
+                event
+                {:key :1 :down? true}]
+        listener {:key :left :down? true}
+        listeners [listener
+                   {:key :right :down? true}]
+        prev-state {:right true}]
+    (testing "Returns matching events, combined with their listeners"
+      (is (= (logic/events-with-listeners events listeners prev-state) [{:event event :listeners [listener]}])))))
+
+(deftest handle-keyboard-events-test
+  (let [events [{:key :left, :down? true}
+                {:key :right, :down? true}
+                {:key :1, :down? true}]
+        test-state (atom {})
+        left-callback (fn [] (swap! test-state #(assoc % :left-callback-called true)))
+        right-callback (fn [] (swap! test-state #(assoc % :right-callback-called true)))
+        listeners [{:key :left, :down? true :repeating? false :callback left-callback}
+                   {:key :right, :down? true, :repeating? false :callback right-callback}]
+        state (atom {:left true})]
+    (testing "It calls the appropriate callbacks and records the events"
+      (logic/handle-keyboard-events events listeners state)
+      (is (= {:right-callback-called true} @test-state))
+      (is (= {:left true :right true} @state)))))
+
+;; TODO handle key-up

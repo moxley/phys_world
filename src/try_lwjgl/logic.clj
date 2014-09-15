@@ -4,43 +4,73 @@
 (def angle (atom 0.1))
 (def int-value (atom 0))
 (def state (atom {}))
-(def key-callbacks (atom []))
+(def key-listeners (atom []))
 
 (defn inc-angle []
   (swap! angle (fn [a0] (+ a0 0.5))))
 
+;;
+;; Filtered events
+;;
+
+(defn key-down-in-state [key prev-state]
+  (prev-state key))
+
+(defn listener-matches-event? [listener event prev-state]
+  (and
+   (= (event :key) (listener :key))
+   (= (event :down?) (listener :down?))
+   (and
+    (or
+     (listener :repeating?)
+     (not (key-down-in-state (event :key) prev-state)))
+    listener)))
+
+(defn listener-event-matcher [event prev-state]
+  (fn [listener]
+    (listener-matches-event? listener event prev-state)))
+
+(defn listeners-for-event [event listeners prev-state]
+  (filter identity
+          (map (listener-event-matcher event prev-state) listeners)))
+
+(defn events-with-listeners [events listeners prev-state]
+  (filter (fn [el] (not (empty? (el :listeners))))
+          (map (fn [event]
+                 {:event event :listeners (listeners-for-event event listeners prev-state)})
+               events)))
+
+;;
+;; Callback framework
+;;
+
 ;; Register callback, key, non-repeating?
 (defn register-key-callback [callback-spec]
-  (swap! key-callbacks #(conj % callback-spec)))
+  (swap! key-listeners #(conj % callback-spec)))
 
-(defn callback-matches-event? [event]
-  (fn [callback]
-    (and (= (callback :key) (event :key))
-         (= (callback :down?) (event :down?)))))
-
-(defn callback-keyboard-events [events]
+(defn callback-keyboard-events [els]
   "Callback matching keyboard events"
+  (doseq [event-listeners els]
+    (let [event (event-listeners :event)
+          listeners (event-listeners :listeners)]
+      (doseq [listener listeners]
+        ((listener :callback))))))
+
+(defn record-keyboard-events [events state]
   (doseq [event events]
-    (doseq [cb (filter (callback-matches-event? event) @key-callbacks)]
-      (swap! state #(assoc % :left-down true))
-      ((cb :callback)))))
+    (swap! state #(assoc % (event :key) true))))
 
-(defn record-keyboard-events [events])
+(defn handle-keyboard-events
+  ([events] (handle-keyboard-events events @key-listeners state))
+  ([events listeners state]
+    (let [els (events-with-listeners events listeners @state)
+          events (map :event els)]
+      (callback-keyboard-events els)
+      (record-keyboard-events events state))))
 
-(defn handle-keyboard-events [events]
-  (callback-keyboard-events events)
-  (record-keyboard-events events))
-
-(defn event-matches? [event pattern]
-  (and
-   (= (event :key) (pattern :key))
-   (= (event :down?) (pattern :down?))))
-
-(defn event-matcher [pattern]
-  (fn [event] (event-matches? event pattern)))
-
-(defn filtered-events [pattern events]
-  (filter (event-matcher pattern) events))
+;;
+;; Main
+;;
 
 (defn update [delta]
   (let [x (Mouse/getX)
