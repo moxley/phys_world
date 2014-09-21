@@ -1,7 +1,10 @@
 (ns try-lwjgl.logic-test
+  (:import [org.lwjgl.input Mouse Keyboard])
   (:require [clojure.test :refer :all]
             [try-lwjgl.core :refer :all]
             [try-lwjgl.logic :as logic]))
+
+(logic/init)
 
 (def test-state (atom {}))
 
@@ -12,7 +15,7 @@
   (testing "It registers a callback for a given key"
     (logic/register-key-callback {:key :left, :callback left-key-callback, :repeating? false})
     (is (= [{:key :left :callback left-key-callback :repeating? false}]
-           @logic/key-callbacks))))
+           @logic/key-listeners))))
 
 (deftest key-down-test
   (testing "Left keydown is recorded to @state"
@@ -74,5 +77,29 @@
       (logic/handle-keyboard-events events listeners state)
       (is (= {:right-callback-called true} @test-state))
       (is (= {:left true :right true} @state)))))
+
+(deftest collect-key-events-test
+  (testing "It collects events into key-events"
+    (let [key-events    (atom []) ;; Value used in dependency injection
+          source-events [{:key Keyboard/KEY_LEFT, :repeat? false}
+                         {:key Keyboard/KEY_LEFT, :repeat? true}]
+          current-index (atom 0)
+          current-event (atom nil)
+          next-fn (fn []
+                    (when (< @current-index (count source-events))
+                      (swap! current-event (fn [_] (source-events @current-index)))
+                      (swap! current-index #(inc %))
+                      true))
+          current-key-fn     (fn [] (@current-event :key))
+          is-repeat-event-fn (fn [] (@current-event :repeat?))]
+      (logic/collect-key-events key-events
+                                next-fn
+                                current-key-fn
+                                is-repeat-event-fn)
+      (is (= 2 (count @key-events)))
+      (is (= {:key :key_left, :repeat? false} (@key-events 0)))
+      (is (= {:key :key_left, :repeat? true}  (@key-events 1))))))
+
+(collect-key-events-test)
 
 ;; TODO handle key-up
