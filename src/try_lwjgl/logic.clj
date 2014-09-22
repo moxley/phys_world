@@ -6,73 +6,13 @@
 (def state (atom {}))
 (def key-map {})
 (def key-listeners (atom []))
+(def key-events (atom []))
 
 (defn inc-angle []
   (swap! angle (fn [a0] (+ a0 0.5))))
 
 ;;
-;; Filtered events
-;;
-
-(defn key-down-in-state [key prev-state]
-  (prev-state key))
-
-(defn listener-matches-event? [listener event prev-state]
-  (and
-   (= (event :key) (listener :key))
-   (= (event :down?) (listener :down?))
-   (and
-    (or
-     (listener :repeating?)
-     (not (key-down-in-state (event :key) prev-state)))
-    listener)))
-
-(defn listener-event-matcher [event prev-state]
-  (fn [listener]
-    (listener-matches-event? listener event prev-state)))
-
-(defn listeners-for-event [event listeners prev-state]
-  (filter identity
-          (map (listener-event-matcher event prev-state) listeners)))
-
-(defn events-with-listeners [events listeners prev-state]
-  (filter (fn [el] (not (empty? (el :listeners))))
-          (map (fn [event]
-                 {:event event :listeners (listeners-for-event event listeners prev-state)})
-               events)))
-
-;;
-;; Callback framework
-;;
-
-;; Register callback, key, non-repeating?
-(defn register-key-callback [callback-spec]
-  (swap! key-listeners #(conj % callback-spec)))
-
-(defn callback-keyboard-events [els]
-  "Callback matching keyboard events"
-  (doseq [event-listeners els]
-    (let [event (event-listeners :event)
-          listeners (event-listeners :listeners)]
-      (doseq [listener listeners]
-        ((listener :callback))))))
-
-(defn record-keyboard-events [events state]
-  (doseq [event events]
-    (swap! state #(assoc % (event :key) true))))
-
-(defn handle-keyboard-events
-  ([events] (handle-keyboard-events events @key-listeners state))
-  ([events listeners state]
-    (let [els (events-with-listeners events listeners @state)
-          events (map :event els)]
-      (callback-keyboard-events els)
-      (record-keyboard-events events state))))
-
-(def key-events (atom []))
-
-;;
-;; Extract keyboard events
+;; Extract keyboard events from LWJGL
 ;;
 
 (defn keyboard-next []
@@ -100,6 +40,64 @@
     (loop [has-event? (next?)]
       (collect-current-event key-events (get-event-key) (repeat-event?))
       (and (next?) (recur true)))))
+
+;;
+;; Event filtering
+;;
+
+(defn key-down-in-state [key prev-state]
+  (prev-state key))
+
+(defn listener-matches-event? [listener event]
+  (and
+   (= (event :key) (listener :key))
+   (= (event :down?) (listener :down?))
+   (and
+    (or
+     (listener :repeat?)
+     (not (event :repeat?))))
+    listener))
+
+;; (defn listener-event-matcher [event]
+;;   (fn [listener]
+;;     (listener-matches-event? listener event)))
+
+(defn listeners-for-event [event listeners]
+  (filter identity
+          (map (fn [listener] (listener-matches-event? listener event))
+               listeners)))
+
+(defn events-with-listeners [events listeners]
+  (filter (fn [el] (not (empty? (last el))))
+          (map (fn [event]
+                 [event (listeners-for-event event listeners)])
+               events)))
+
+;;
+;; Callback framework
+;;
+
+;; Register listener, key, non-repeat?
+(defn register-key-callback [listener]
+  (swap! key-listeners #(conj % listener)))
+
+(defn callback-listeners-for-event
+  "Callback matching keyboard events"
+  ([event matching-listeners]
+   (doseq [listener matching-listeners]
+     ((listener :callback)))))
+
+(defn callback-keyboard-events
+  ([events] (callback-keyboard-events events @key-listeners))
+  ([events listeners]
+   (doseq [[event matching-listeners] (events-with-listeners events listeners)]
+     (callback-listeners-for-event event matching-listeners))))
+
+(defn handle-keyboard-events
+  ([events] (handle-keyboard-events events @key-listeners))
+  ([events listeners]
+   (doseq [[event matching-listeners] (events-with-listeners events listeners)]
+     (callback-listeners-for-event event matching-listeners))))
 
 ;;
 ;; Initialize
@@ -161,4 +159,4 @@
   (println "left-key-down"))
 
 (defn setup []
-  (register-key-callback {:key :left :down? true :repeating? false :callback left-key-down}))
+  (register-key-callback {:key :left :down? true :repeat? false :callback left-key-down}))
