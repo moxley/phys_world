@@ -116,10 +116,11 @@
     (update (get-delta))
     (draw)
     (Display/update)
-    (Display/sync 60))
+    (Display/sync 2))
   (Display/destroy))
 
 (defn -main
   []
   (println "Try LWJGL")
+  (logic/init)
   (run))
