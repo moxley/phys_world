@@ -13,8 +13,7 @@
     (swap! last-frame-time (fn [lft t] t) time)
     delta))
 
-(defn run
-  []
+(defn run []
   (while (not (Display/isCloseRequested))
     (logic/update (get-delta))
     (display/draw)
