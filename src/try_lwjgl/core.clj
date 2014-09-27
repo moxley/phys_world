@@ -116,7 +116,7 @@
     (update (get-delta))
     (draw)
     (Display/update)
-    (Display/sync 2))
+    (Display/sync 60))
   (Display/destroy))
 
 (defn -main

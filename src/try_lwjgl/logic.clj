@@ -12,7 +12,7 @@
   (swap! angle (fn [a0] (+ a0 0.5))))
 
 ;;
-;; Extract keyboard events from LWJGL
+;; Abstraction over LWJGL's Keyboard API
 ;;
 
 (defn keyboard-next? []
@@ -52,9 +52,6 @@
 ;; Event filtering
 ;;
 
-(defn key-down-in-state [key prev-state]
-  (prev-state key))
-
 (defn listener-matches-event? [listener event]
   (and
    (= (event :key) (listener :key))
@@ -64,10 +61,6 @@
      (listener :repeat?)
      (not (event :repeat?))))
     listener))
-
-;; (defn listener-event-matcher [event]
-;;   (fn [listener]
-;;     (listener-matches-event? listener event)))
 
 (defn listeners-for-event [event listeners]
   (filter identity
