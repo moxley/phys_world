@@ -35,14 +35,17 @@
 
 (def player-position (atom [0.0, 1.0, 10.0]))
 
-(defn move-sideways [direction]
-  (let [index 0]
-    (swap! player-position (fn [pos]
-                             (let [old-val (pos index)
-                                   new-val (+ old-val (* direction 1.0))]
-                               (assoc pos index new-val))))))
+(defn move [axis amount]
+  (swap! player-position (fn [pos]
+                           (let [old-val (pos axis)
+                                 new-val (+ old-val (* amount 1.0))]
+                             (assoc pos axis new-val)))))
 
-(defn move-forward [direction])
+(defn move-sideways [amount]
+  (move 0 amount))
+
+(defn move-forward [amount]
+  (move 2 (* -1.0 amount)))
 
 (def listeners
   [{:key :left, :down? true, :repeat? false :callback key-left-down}
