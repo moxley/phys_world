@@ -4,7 +4,6 @@
 
 (def angle (atom 0.1))
 (def angle-speed (atom 0.5))
-(def eye-z (atom 10.0))
 (def mode (atom :angle-speed))
 
 (defn inc-angle []
@@ -14,8 +13,7 @@
   (println "Key LEFT down"))
 
 (def up-down-callbacks
-  {:angle-speed {:atom angle-speed, :amount 0.1}
-   :eye-z {:atom eye-z, :amount 1.0}})
+  {:angle-speed {:atom angle-speed, :amount 0.1}})
 
 (defn adjust-value [type up?]
   (let [spec (type up-down-callbacks)
@@ -35,12 +33,35 @@
   (println "Mode:" m)
   (swap! mode (fn [_] identity m)))
 
+(def player-position (atom [0.0, 1.0, 10.0]))
+
+(defn move-sideways [direction]
+  (let [index 0]
+    (swap! player-position (fn [pos]
+                             (let [old-val (pos index)
+                                   new-val (+ old-val (* direction 1.0))]
+                               (assoc pos index new-val))))))
+
+(defn move-forward [direction])
+
+(def listeners
+  [{:key :left, :down? true, :repeat? false :callback key-left-down}
+
+   ;; Navigation
+   {:key :a, :down? true, :repeat? false :callback (fn [] (move-sideways -1.0))}
+   {:key :d, :down? true, :repeat? false :callback (fn [] (move-sideways 1.0))}
+   {:key :w, :down? true, :repeat? false :callback (fn [] (move-forward 1.0))}
+   {:key :s, :down? true, :repeat? false :callback (fn [] (move-forward -1.0))}
+
+   ;; Debugging keys
+   {:key :up, :down? true, :repeat? false :callback key-up}
+   {:key :down, :down? true, :repeat? false :callback key-down}
+   {:key :1, :down? true, :repeat? false :callback (fn [] (set-mode :angle-speed))}
+   {:key :2, :down? true, :repeat? false :callback (fn [] (set-mode :eye-z))}])
+
 (defn register-listeners []
-  (input/register-key-callback {:key :left, :down? true, :repeat? false :callback key-left-down})
-  (input/register-key-callback {:key :up, :down? true, :repeat? false :callback key-up})
-  (input/register-key-callback {:key :down, :down? true, :repeat? false :callback key-down})
-  (input/register-key-callback {:key :1, :down? true, :repeat? false :callback (fn [] (set-mode :angle-speed))})
-  (input/register-key-callback {:key :2, :down? true, :repeat? false :callback (fn [] (set-mode :eye-z))}))
+  (doseq [listener listeners]
+    (input/register-key-callback listener)))
 
 (defn init []
   (input/init)
