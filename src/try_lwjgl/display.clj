@@ -124,9 +124,10 @@
 
   (GL11/glMatrixMode GL11/GL_MODELVIEW)
   (GL11/glLoadIdentity)
-  (let [look-pos (translate-position @logic/player-position [0 0 -1])]
-    (GLU/gluLookAt (float (@logic/player-position 0)) (float (@logic/player-position 1)) (float (@logic/player-position 2))
-                   (look-pos 0) (look-pos 1) (look-pos 2)
+  (let [[look-x look-y look-z] (logic/translate-with-direction @logic/player-position @logic/player-direction)
+        [pos-x pos-y pos-z] @logic/player-position]
+    (GLU/gluLookAt pos-x pos-y pos-z
+                   look-x look-y look-z
                    (float 0.0) (float 1.0) (float 0.0)))
 
   (draw-vertices)
