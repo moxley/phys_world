@@ -62,59 +62,6 @@
    @key-events))
 
 ;;
-;; Event filtering
-;;
-
-(defn listener-matches-event? [listener event]
-  (and
-   (= (event :key) (listener :key))
-   (= (event :down?) (listener :down?))
-   (and
-    (or
-     (listener :repeat?)
-     (not (event :repeat?))))
-    listener))
-
-(defn listeners-for-event [event listeners]
-  (filter identity
-          (map (fn [listener] (listener-matches-event? listener event))
-               listeners)))
-
-(defn events-with-listeners [events listeners]
-  (filter (fn [el] (not (empty? (last el))))
-          (map (fn [event] [event (listeners-for-event event listeners)])
-               events)))
-
-;;
-;; Callback framework
-;;
-
-;; Register listener, key, non-repeat?
-(defn register-key-callback
-  ([listener] (register-key-callback key-listeners listener))
-  ([key-listeners listener]
-   (swap! key-listeners #(conj % listener))))
-
-(defn callback-listeners-for-event
-  "Callback matching keyboard events"
-  ([event matching-listeners]
-   (doseq [listener matching-listeners]
-     ((listener :callback)))))
-
-(defn callback-keyboard-events
-  ([events] (callback-keyboard-events events @key-listeners))
-  ([events listeners]
-   (doseq [event events]
-     (callback-listeners-for-event
-      event
-      (listeners-for-event event listeners)))))
-
-(defn handle-keyboard-events
-  ([] (handle-keyboard-events (collect-key-events) @key-listeners))
-  ([events listeners]
-   (callback-keyboard-events events listeners)))
-
-;;
 ;; Mouse
 ;;
 

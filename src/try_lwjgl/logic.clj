@@ -78,31 +78,6 @@
 (defn move-forward [amount]
   (move @player-direction amount))
 
-(def listeners
-  [{:key :left, :down? true, :repeat? false :callback key-left-down}
-   {:key :right, :down? true, :repeat? false :callback key-right-down}
-
-   ;; Navigation
-   {:key :a, :down? true, :repeat? false :callback (fn [] (move-sideways -1.0))}
-   {:key :d, :down? true, :repeat? false :callback (fn [] (move-sideways 1.0))}
-   {:key :w, :down? true, :repeat? false :callback (fn [] (move-forward 1.0))}
-   {:key :s, :down? true, :repeat? false :callback (fn [] (move-forward -1.0))}
-
-   ;; Debugging keys
-   {:key :up, :down? true, :repeat? false :callback key-up}
-   {:key :down, :down? true, :repeat? false :callback key-down}
-   {:key :1, :down? true, :repeat? false :callback (fn [] (swap! show-player? #(not %)))}
-   {:key :2, :down? true, :repeat? false :callback (fn [] (set-mode :eye-z))}])
-
-(defn register-listeners []
-  (doseq [listener listeners]
-    (input/register-key-callback listener)))
-
-(defn init []
-  (input/init)
-  (register-listeners)
-  (print-player))
-
 (def mouse-sensitivity 0.002)
 
 (defn handle-mouse []
@@ -110,7 +85,59 @@
     (when (not (= dx 0))
       (swap! player-direction #(rotate-direction % 1 (* -1.0 dx mouse-sensitivity))))))
 
+(defn handle-movement-key-up [key event key-down-at]
+  (if (and event (not (event :down?)))
+    ;; Key up
+    (when @key-down-at
+      (swap! key-down-at (fn [_] nil)))))
+
+(defn handle-movement-key-down [key event key-down-at move-fn]
+  (when (or (and event (event :down?)) @key-down-at)
+    (move-fn key)
+    (if-not @key-down-at (swap! key-down-at (fn [_] (System/currentTimeMillis))))))
+
+(def keys-down-at
+  {:a (atom nil)
+   :d (atom nil)
+   :w (atom nil)
+   :s (atom nil)})
+
+(defn event-move [key event move-fn]
+  (let [key-down-at (keys-down-at key)]
+    (handle-movement-key-up key event key-down-at)
+    (handle-movement-key-down key event key-down-at move-fn)))
+
+(defn strife [key event]
+  (event-move key event (fn [key] (move-sideways (key {:a -0.1 :d 0.1})))))
+
+(defn event-move-forward [key event]
+  (event-move key event (fn [key] (move-forward (key {:w 0.1 :s -0.1})))))
+
+(def key-listeners
+  {:w event-move-forward
+   :s event-move-forward
+   :a strife
+   :d strife
+   :1 (fn [key event] (when (and event (event :down?) (not (event :repeat?)))
+                        (swap! show-player? #(not %))))})
+
+(defn events-by-key [events]
+  (reduce (fn [m event] (assoc m (event :key) event))
+          {} events))
+
+(defn handle-keyboard []
+  (let [events (input/collect-key-events)
+        events-by-key (events-by-key events)]
+
+    (doseq [[key listener] key-listeners]
+      (let [event (events-by-key key)]
+        (listener key event)))))
+
+(defn init []
+  (input/init)
+  (print-player))
+
 (defn update [delta]
-  (input/handle-keyboard-events)
+  (handle-keyboard)
   (handle-mouse)
   (inc-angle))
