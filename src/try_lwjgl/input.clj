@@ -96,6 +96,19 @@
    (callback-keyboard-events events listeners)))
 
 ;;
+;; Mouse
+;;
+
+(defn set-mouse-grabbed [grabbed?]
+  (Mouse/setGrabbed grabbed?))
+
+(defn mouse-dx []
+  (Mouse/getDX))
+
+(defn mouse-dy []
+  (Mouse/getDY))
+
+;;
 ;; Initialize
 ;;
 
@@ -110,4 +123,5 @@
     (reduce append-key-code-line {} (line-seq rdr))))
 
 (defn init []
-  (def key-map (load-key-codes)))
+  (def key-map (load-key-codes))
+  (set-mouse-grabbed true))

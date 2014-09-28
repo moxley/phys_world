@@ -1,5 +1,4 @@
 (ns try-lwjgl.logic
-  (:import [org.lwjgl.input Mouse Keyboard])
   (:require [try-lwjgl.input :as input]))
 
 (def angle (atom 0.1))
@@ -104,9 +103,14 @@
   (register-listeners)
   (print-player))
 
-(defn update [delta]
-  (let [x (Mouse/getX)
-        y (Mouse/getY)]
+(def mouse-sensitivity 0.002)
 
-    (input/handle-keyboard-events)
-    (inc-angle)))
+(defn handle-mouse []
+  (let [dx (input/mouse-dx)]
+    (when (not (= dx 0))
+      (swap! player-direction #(rotate-direction % 1 (* -1.0 dx mouse-sensitivity))))))
+
+(defn update [delta]
+  (input/handle-keyboard-events)
+  (handle-mouse)
+  (inc-angle))
