@@ -1,9 +1,27 @@
 (ns try-lwjgl.input
   (:import [org.lwjgl.input Mouse Keyboard]))
 
-(def key-map {})
+(def key-map (atom nil))
 (def key-listeners (atom []))
 (def key-events (atom []))
+
+;;
+;; Key map
+;;
+
+(defn append-key-code-line [key-map line]
+  (let [[code-str name] (clojure.string/split line (re-pattern " "))
+         code (Integer/parseInt code-str)
+         key (keyword name)]
+    (assoc key-map code key)))
+
+(defn load-key-codes []
+  (with-open [rdr (clojure.java.io/reader "key_codes.txt")]
+    (reduce append-key-code-line {} (line-seq rdr))))
+
+(defn get-key-map []
+  (or @key-map
+      (swap! key-map (fn [_] (load-key-codes)))))
 
 ;;
 ;; Abstraction over LWJGL's Keyboard API
@@ -22,7 +40,8 @@
   (Keyboard/getEventKeyState))
 
 (defn collect-current-event
-  ([key-events key-code down? repeat-event?]
+  [key-events key-code down? repeat-event?]
+  (let [key-map (get-key-map)]
     (swap! key-events #(conj % {:key (key-map key-code)
                                 :down? down?
                                 :repeat? repeat-event?}))))
@@ -112,16 +131,5 @@
 ;; Initialize
 ;;
 
-(defn append-key-code-line [key-map line]
-  (let [[code-str name] (clojure.string/split line (re-pattern " "))
-         code (Integer/parseInt code-str)
-         key (keyword name)]
-    (assoc key-map code key)))
-
-(defn load-key-codes []
-  (with-open [rdr (clojure.java.io/reader "key_codes.txt")]
-    (reduce append-key-code-line {} (line-seq rdr))))
-
 (defn init []
-  (def key-map (load-key-codes))
   (set-mouse-grabbed true))
