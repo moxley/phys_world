@@ -21,9 +21,9 @@
      ;; (0, 0, 0) is origin, upright, facing -z
      (let [[angle-x angle-y angle-z] direction
            [px py pz] position
-           dx (* -1.0 distance (Math/sin angle-y))
-           dy 0.0
-           dz (* -1.0 distance (Math/cos angle-y))
+           dx (* -1.0 distance (Math/cos angle-x) (Math/sin angle-y))
+           dy (* -1.0 distance (Math/sin angle-x))
+           dz (* -1.0 distance (Math/cos angle-y) (Math/cos angle-x))
            new-x (+ px dx)
            new-y (+ py dy)
            new-z (+ pz dz)]
@@ -81,9 +81,12 @@
 (def mouse-sensitivity 0.002)
 
 (defn handle-mouse []
-  (let [dx (input/mouse-dx)]
+  (let [dx (input/mouse-dx)
+        dy (input/mouse-dy)]
     (when (not (= dx 0))
-      (swap! player-direction #(rotate-direction % 1 (* -1.0 dx mouse-sensitivity))))))
+      (swap! player-direction #(rotate-direction % 1 (* -1.0 dx mouse-sensitivity))))
+    (when (not (= dy 0))
+      (swap! player-direction #(rotate-direction % 0 (* -1.0 dy mouse-sensitivity))))))
 
 (defn handle-movement-key-up [key event key-down-at]
   (if (and event (not (event :down?)))
