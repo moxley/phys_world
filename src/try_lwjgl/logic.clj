@@ -7,6 +7,7 @@
 (def player-position (atom [(float 0.0) (float 1.0) (float 10.0)]))
 (def player-direction (atom [(float 0.0) (float 0.0) (float 0.0)]))
 (def show-player? (atom false))
+(def keys-down-at {})
 
 (defn inc-angle []
   (swap! angle #(+ % @angle-speed)))
@@ -78,6 +79,9 @@
 (defn move-forward [amount]
   (move @player-direction amount))
 
+(defn move-vertical [amount]
+  (swap! player-position (fn [pp] (assoc pp 1 (+ (pp 1) amount)))))
+
 (def mouse-sensitivity 0.002)
 
 (defn handle-mouse []
@@ -99,12 +103,6 @@
     (move-fn key)
     (if-not @key-down-at (swap! key-down-at (fn [_] (System/currentTimeMillis))))))
 
-(def keys-down-at
-  {:a (atom nil)
-   :d (atom nil)
-   :w (atom nil)
-   :s (atom nil)})
-
 (defn event-move [key event move-fn]
   (let [key-down-at (keys-down-at key)]
     (handle-movement-key-up key event key-down-at)
@@ -116,17 +114,28 @@
 (defn event-move-forward [key event]
   (event-move key event (fn [key] (move-forward (key {:w 0.1 :s -0.1})))))
 
+(defn event-move-vertical [key event]
+  (event-move key event (fn [key] (move-vertical (key {:space 0.1 :lshift -0.1})))))
+
+(defn events-by-key [events]
+  (reduce (fn [m event] (assoc m (event :key) event))
+          {} events))
+
 (def key-listeners
   {:w event-move-forward
    :s event-move-forward
    :a strife
    :d strife
    :1 (fn [key event] (when (and event (event :down?) (not (event :repeat?)))
-                        (swap! show-player? #(not %))))})
+                        (swap! show-player? #(not %))))
+   :space event-move-vertical
+   :lshift event-move-vertical})
 
-(defn events-by-key [events]
-  (reduce (fn [m event] (assoc m (event :key) event))
-          {} events))
+(def keys-down-at
+  "Maps keyboard key to timestamp atom: {:keyboard-key (atom nil)}"
+  (reduce (fn [m key] (assoc m key (atom nil)))
+          {}
+          (keys key-listeners)))
 
 (defn handle-keyboard []
   (let [events (input/collect-key-events)
