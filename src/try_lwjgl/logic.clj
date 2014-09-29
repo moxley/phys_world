@@ -73,7 +73,7 @@
   (player-moved)
   @player-position)
 
-(defn move-sideways [amount]
+(defn strife [amount]
   (move (rotate-direction @player-direction 1 (* -0.5 Math/PI)) amount))
 
 (defn move-forward [amount]
@@ -108,8 +108,8 @@
     (handle-movement-key-up key event key-down-at)
     (handle-movement-key-down key event key-down-at move-fn)))
 
-(defn strife [key event]
-  (event-move key event (fn [key] (move-sideways (key {:a -0.1 :d 0.1})))))
+(defn event-strife [key event]
+  (event-move key event (fn [key] (strife (key {:a -0.1 :d 0.1})))))
 
 (defn event-move-forward [key event]
   (event-move key event (fn [key] (move-forward (key {:w 0.1 :s -0.1})))))
@@ -124,8 +124,8 @@
 (def key-listeners
   {:w event-move-forward
    :s event-move-forward
-   :a strife
-   :d strife
+   :a event-strife
+   :d event-strife
    :1 (fn [key event] (when (and event (event :down?) (not (event :repeat?)))
                         (swap! show-player? #(not %))))
    :space event-move-vertical
