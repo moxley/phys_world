@@ -104,6 +104,53 @@
              (GL11/glVertex3f 0.0 VERTEXT-WIDTH  1.0)
              (GL11/glVertex3f 0.0 VERTEXT-WIDTH -1.0))))
 
+(defn draw-container-cube []
+  (drawing-object
+   (GL11/glScaled 10.0 10.0 10.0)
+   (GL11/glLineWidth 2.5)
+   (GL11/glColor3f 1.0 0.0 0.0)
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f 0 0 0)
+             (GL11/glVertex3f 1 1 1))
+
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f 1 1 -1)
+             (GL11/glVertex3f -1 1 -1))
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f -1 1 -1)
+             (GL11/glVertex3f -1 -1 -1))
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f -1 -1 -1)
+             (GL11/glVertex3f 1 -1 -1))
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f 1 -1 -1)
+             (GL11/glVertex3f 1 1 -1))
+
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f 1 1 1)
+             (GL11/glVertex3f -1 1 1))
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f -1 1 1)
+             (GL11/glVertex3f -1 -1 1))
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f -1 -1 1)
+             (GL11/glVertex3f 1 -1 1))
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f 1 -1 1)
+             (GL11/glVertex3f 1 1 1))
+
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f -1 -1 -1)
+             (GL11/glVertex3f -1 -1 1)
+             (GL11/glVertex3f -1 1 1)
+             (GL11/glVertex3f -1 1 -1))
+
+   (do-shape GL11/GL_LINES
+             (GL11/glVertex3f 1 -1 -1)
+             (GL11/glVertex3f 1 -1 1)
+             (GL11/glVertex3f 1 1 1)
+             (GL11/glVertex3f 1 1 -1))))
+
 (defn translate-position [position vector]
   (let [position-buf (Vector4f. (float (position 0))
                                 (float (position 1))
@@ -131,6 +178,7 @@
                    (float 0.0) (float 1.0) (float 0.0)))
 
   (draw-vertices)
+  (draw-container-cube)
   (draw-rectangle))
 
 (defn init []
