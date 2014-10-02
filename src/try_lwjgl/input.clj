@@ -8,11 +8,10 @@
 ;;
 ;; Key map
 ;;
-
 (defn append-key-code-line [key-map line]
   (let [[code-str name] (clojure.string/split line (re-pattern " "))
-         code (Integer/parseInt code-str)
-         key (keyword name)]
+        code (Integer/parseInt code-str)
+        key (keyword name)]
     (assoc key-map code key)))
 
 (defn load-key-codes []
