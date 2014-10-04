@@ -8,3 +8,6 @@ pom.xml.asc
 *.class
 /.lein-*
 /.nrepl-port
+/lwjgl-2.9.1
+/lwjgl
+/sandbox
