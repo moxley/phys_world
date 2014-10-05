@@ -15,8 +15,9 @@
 
 (defn run []
   (while (not (Display/isCloseRequested))
-    (logic/update (get-delta))
-    (display/draw)
-    (Display/update)
-    (Display/sync 60))
+    (let [delta (get-delta)]
+      ;;(logic/update delta)
+      (display/iteration delta)
+      (Display/update)
+      (Display/sync 60)))
   (Display/destroy))

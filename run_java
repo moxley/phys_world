@@ -1,7 +1,8 @@
 #!/bin/sh
 
 PROJECT_DIR=/Users/moxley/Dropbox/Programming
+CLASS=${1-MyApp}
 
 java -cp "sandbox/lwjgl-2.9.1.jar:/Users/moxley/lib/slick.jar:src:." \
   -Djava.library.path=$PROJECT_DIR/try_lwjgl/sandbox/native/macosx/x86_64/ \
-  MyApp
+  $CLASS

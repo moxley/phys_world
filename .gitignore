@@ -11,3 +11,5 @@ pom.xml.asc
 /lwjgl-2.9.1
 /lwjgl
 /sandbox
+/nbproject/private/
+/build/
