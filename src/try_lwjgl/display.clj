@@ -88,18 +88,19 @@
   (GL20/glValidateProgram @program)
   (exitOnGLError "Error in setupOpenGL"))
 
+(defn build-camera []
+  (.build
+   (doto (EulerCamera$Builder.)
+     (.setAspectRatio
+      (/ (float (Display/getWidth)) (Display/getHeight)))
+     (.setRotation (float -1.12) (float 0.16) (float 0))
+     (.setPosition (float -1.38) (float 1.36) (float 7.95))
+     (.setFieldOfView 60))))
+
 (defn setup-camera []
-  (let [builder (EulerCamera$Builder.)
-        _ (doto builder
-            (.setAspectRatio
-             (/ (float (Display/getWidth)) (Display/getHeight)))
-            (.setRotation (float -1.12) (float 0.16) (float 0))
-            (.setPosition (float -1.38) (float 1.36) (float 7.95))
-            (.setFieldOfView 60))
-        c (.build builder)]
-    (swap! camera (fn [_] c))
-    (.applyOptimalStates c)
-    (.applyPerspectiveMatrix c)))
+  (doto (swap! camera (fn [_] (build-camera)))
+    (.applyOptimalStates)
+    (.applyPerspectiveMatrix)))
 
 (defmacro do-shape [type & commands]
   `(do
