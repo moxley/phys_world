@@ -7,7 +7,10 @@
            [org.lwjgl BufferUtils]
            [java.awt Font]
            [java.nio.charset Charset]
-           [utility Camera EulerCamera EulerCamera$Builder Model OBJLoader])
+           [utility Camera EulerCamera EulerCamera$Builder Model OBJLoader]
+           [org.newdawn.slick Color]
+           [org.newdawn.slick.opengl Texture TextureLoader]
+           [org.newdawn.slick.util ResourceLoader])
   (:require [try-lwjgl.logic :as logic]
             [clojure.java.io :as io]))
 
@@ -15,6 +18,7 @@
 (def HEIGHT 600)
 (def program (atom nil))
 (def camera (atom nil))
+(def texture (atom nil))
 
 (defn exitOnGLError [errorMessage]
   (let [errorValue (GL11/glGetError)]
@@ -73,6 +77,14 @@
                       (float 0.1)     ;; zNear
                       (float 100.0))  ;; zFar
 
+  ;;
+  ;; Texture support
+  ;;
+  (GL11/glEnable GL11/GL_TEXTURE_2D)
+  ;; enable alpha blending
+  (GL11/glEnable GL11/GL_BLEND)
+  (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
+  
   (GL11/glShadeModel GL11/GL_SMOOTH)
   (GL11/glClearColor (float 0.0) (float 0.0) (float 0.0) (float 0.0))
   (GL11/glClearDepth (float 1.0))
@@ -86,7 +98,9 @@
 
   (GL20/glLinkProgram @program)
   (GL20/glValidateProgram @program)
-  (exitOnGLError "Error in setupOpenGL"))
+  (exitOnGLError "Error in setupOpenGL")
+
+  (swap! texture (fn [_]  (TextureLoader/getTexture "JPG" (ResourceLoader/getResourceAsStream "try_lwjgl/mahogany.jpg")))))
 
 (defn build-camera []
   (.build
@@ -236,24 +250,37 @@
    (Mouse/isButtonDown 0) (Mouse/setGrabbed true)
    (Mouse/isButtonDown 1) (Mouse/setGrabbed false)))
 
-(defn draw []
-  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
-  (GL11/glLoadIdentity)
-  (.applyTranslations @camera)
-        
+(defn draw-models []
   (GL20/glUseProgram @program)
-
-  (let [[look-x look-y look-z] (logic/translate-with-direction @logic/player-position @logic/player-direction)
-        [pos-x pos-y pos-z] @logic/player-position]
-    (GLU/gluLookAt pos-x pos-y pos-z
-                   look-x look-y look-z
-                   (float 0.0) (float 1.0) (float 0.0)))
-
   (draw-vertices)
   (draw-container-cube)
   (draw-rectangle)
+  (GL20/glUseProgram 0))
 
-  (GL20/glUseProgram 0)
+(defn draw-textured-model []
+  (GL11/glBegin GL11/GL_QUADS)
+  (GL11/glTexCoord2f 1 0)
+  (GL11/glVertex3f 1 0 0)
+  (GL11/glTexCoord2f 0 0)
+  (GL11/glVertex3f 0 0 0)
+  (GL11/glTexCoord2f 0 1)
+  (GL11/glVertex3f 0 1 0)
+  (GL11/glTexCoord2f 1 1)
+  (GL11/glVertex3f 1 1 0)
+  (GL11/glEnd))
+
+(defn draw []
+  (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
+
+  (GL11/glLoadIdentity)
+  (.applyTranslations @camera)
+
+  (.bind Color/white)
+  (.bind @texture)
+  (draw-textured-model)
+
+  (draw-models)
+  
   (exitOnGLError "Error in draw"))
 
 (defn iteration [delta]
