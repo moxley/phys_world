@@ -130,23 +130,10 @@
 
 (defn draw-rectangle []
   (drawing-object
-   ;; x, y, z
-   (GL11/glTranslatef 2.5 0.0 0.0)
-
-   ;; glRotatef
-   ;;   arg0: angle
-   ;;   arg1: x axis (left to right)
-   ;;   arg2: y axis (down to up)
-   ;;   arg3: z axis (front to back)
-   (GL11/glRotatef @logic/angle 1.0 0.0 0.0)
-
-   (GL11/glColor3f 0.5 0.5 1.0)
-
-   (do-shape GL11/GL_QUADS
-             (GL11/glVertex3f -1.0  1.0 0.0)
-             (GL11/glVertex3f  1.0  1.0 0.0)
-             (GL11/glVertex3f  1.0 -1.0 0.0)
-             (GL11/glVertex3f -1.0 -1.0 0.0))))
+   (GL11/glColor3f 1 1 1)
+   (GL11/glTranslatef 0 -10 0)
+   (GL11/glRotatef 90 1 0 0)
+   (draw-textured-panel)))
 
 (def AXIS-WIDTH 0.05)
 
@@ -252,14 +239,10 @@
    (Mouse/isButtonDown 1) (Mouse/setGrabbed false)
    (Mouse/isButtonDown 2) (println "Mouse button 2 down")))
 
-(defn draw-models []
-  (GL20/glUseProgram @program)
-  (draw-axes)
-  (draw-container-cube)
-  (draw-rectangle)
-  (GL20/glUseProgram 0))
-
 (defn draw-textured-panel []
+  (.bind Color/white)
+  (.bind @texture)
+
   (do-shape GL11/GL_QUADS
             (GL11/glTexCoord2f 1 0)
             (GL11/glVertex3f 1 0 0)
@@ -270,46 +253,69 @@
             (GL11/glTexCoord2f 1 1)
             (GL11/glVertex3f 1 1 0)))
 
-(defn draw-textured-model []
-  ;; face
-  (draw-textured-panel)
+(defn draw-block [draw-panel]
+    ;; face
+  (draw-panel)
 
   ;; back
   (drawing-object
    (GL11/glTranslatef 0 0 -1)
-   (draw-textured-panel))
+   (draw-panel))
 
   ;; ;; left
   (drawing-object
    (GL11/glRotatef 90 0 1 0)
-   (draw-textured-panel))
+   (draw-panel))
 
-  ;; ;; right
+  ;; right
   (drawing-object
    (GL11/glTranslatef 1 0 0)
    (GL11/glRotatef 90 0 1 0)
-   (draw-textured-panel))
+   (draw-panel))
 
   ;; back
   (drawing-object
    (GL11/glRotatef -90 1 0 0)
-   (draw-textured-panel))
+   (draw-panel))
 
   ;; ;; top
   (drawing-object
    (GL11/glTranslatef 0 1 0)
    (GL11/glRotatef -90 1 0 0)
-   (draw-textured-panel)))
+   (draw-panel)))
+
+(defn draw-textured-block []
+  (draw-block draw-textured-panel))
+
+(defn draw-stairs []
+  (doseq [side [0 1 2 3]]
+    (doseq [up [0 1 2]]
+      (drawing-object
+       (GL11/glTranslatef side up (* -1.0 up))
+       (draw-textured-block)))))
+
+(defn draw-floor []
+  (doseq [x (range -10 10)
+          z (range -10 10)]
+    (drawing-object
+     (GL11/glTranslatef x -10 z)
+     (GL11/glRotatef 90 1 0 0)
+     (draw-textured-panel))))
+
+(defn draw-models []
+  (GL20/glUseProgram @program)
+  (draw-axes)
+  (draw-container-cube)
+  (GL20/glUseProgram 0)
+
+  (draw-stairs)
+
+  (draw-floor))
 
 (defn draw []
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
-
   (GL11/glLoadIdentity)
   (.applyTranslations @camera)
-
-  (.bind Color/white)
-  (.bind @texture)
-  (draw-textured-model)
 
   (draw-models)
   
