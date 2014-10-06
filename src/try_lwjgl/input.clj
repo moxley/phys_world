@@ -78,4 +78,4 @@
 ;;
 
 (defn init []
-  (set-mouse-grabbed true))
+  (set-mouse-grabbed false))

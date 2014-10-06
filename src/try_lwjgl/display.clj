@@ -106,7 +106,7 @@
   (.build
    (doto (EulerCamera$Builder.)
      (.setAspectRatio
-      (/ (float (Display/getWidth)) (Display/getHeight)))
+      (/ (float WIDTH) (float HEIGHT)))
      (.setRotation (float -1.12) (float 0.16) (float 0))
      (.setPosition (float -1.38) (float 1.36) (float 7.95))
      (.setFieldOfView 60))))
@@ -131,7 +131,7 @@
 (defn draw-rectangle []
   (drawing-object
    ;; x, y, z
-   (GL11/glTranslatef 1.5 0.0 0.0)
+   (GL11/glTranslatef 2.5 0.0 0.0)
 
    ;; glRotatef
    ;;   arg0: angle
@@ -148,9 +148,9 @@
              (GL11/glVertex3f  1.0 -1.0 0.0)
              (GL11/glVertex3f -1.0 -1.0 0.0))))
 
-(def VERTEXT-WIDTH 0.05)
+(def AXIS-WIDTH 0.05)
 
-(defn draw-vertices []
+(defn draw-axes []
   (drawing-object
 
    ;;(GL11/glTranslatef -1.5 0.0 0.0)
@@ -162,34 +162,32 @@
    (do-shape GL11/GL_QUADS
              (GL11/glVertex3f -1.0 0.0 0.0)
              (GL11/glVertex3f  1.0 0.0 0.0)
-             (GL11/glVertex3f  1.0 VERTEXT-WIDTH 0.0)
-             (GL11/glVertex3f -1.0 VERTEXT-WIDTH 0.0))
+             (GL11/glVertex3f  1.0 AXIS-WIDTH 0.0)
+             (GL11/glVertex3f -1.0 AXIS-WIDTH 0.0))
 
    ;; y-axis (green)
    (GL11/glColor3f 0.0 1.0 0.0)
    (do-shape GL11/GL_QUADS
              (GL11/glVertex3f 0.0 -1.0 0.0)
              (GL11/glVertex3f 0.0  1.0 0.0)
-             (GL11/glVertex3f 0.0  1.0 VERTEXT-WIDTH)
-             (GL11/glVertex3f 0.0 -1.0 VERTEXT-WIDTH))
+             (GL11/glVertex3f 0.0  1.0 AXIS-WIDTH)
+             (GL11/glVertex3f 0.0 -1.0 AXIS-WIDTH))
 
    ;; z-axis (blue)
    (GL11/glColor3f 0.0 0.0 1.0)
    (do-shape GL11/GL_QUADS
              (GL11/glVertex3f 0.0 0.0 -1.0)
              (GL11/glVertex3f 0.0 0.0  1.0)
-             (GL11/glVertex3f 0.0 VERTEXT-WIDTH  1.0)
-             (GL11/glVertex3f 0.0 VERTEXT-WIDTH -1.0))))
+             (GL11/glVertex3f 0.0 AXIS-WIDTH  1.0)
+             (GL11/glVertex3f 0.0 AXIS-WIDTH -1.0))))
 
 (defn draw-container-cube []
   (drawing-object
    (GL11/glScaled 10.0 10.0 10.0)
    (GL11/glLineWidth 2.5)
    (GL11/glColor3f 1.0 0.0 0.0)
-   (do-shape GL11/GL_LINES
-             (GL11/glVertex3f 0 0 0)
-             (GL11/glVertex3f 1 1 1))
 
+   ;; Back wall
    (do-shape GL11/GL_LINES
              (GL11/glVertex3f 1 1 -1)
              (GL11/glVertex3f -1 1 -1))
@@ -203,6 +201,7 @@
              (GL11/glVertex3f 1 -1 -1)
              (GL11/glVertex3f 1 1 -1))
 
+   ;; Front wall
    (do-shape GL11/GL_LINES
              (GL11/glVertex3f 1 1 1)
              (GL11/glVertex3f -1 1 1))
@@ -216,12 +215,14 @@
              (GL11/glVertex3f 1 -1 1)
              (GL11/glVertex3f 1 1 1))
 
+   ;; Left wall
    (do-shape GL11/GL_LINES
              (GL11/glVertex3f -1 -1 -1)
              (GL11/glVertex3f -1 -1 1)
              (GL11/glVertex3f -1 1 1)
              (GL11/glVertex3f -1 1 -1))
 
+   ;; Right wall
    (do-shape GL11/GL_LINES
              (GL11/glVertex3f 1 -1 -1)
              (GL11/glVertex3f 1 -1 1)
@@ -247,27 +248,58 @@
   (.processMouse @camera 1 80 -80)
   (.processKeyboard @camera 16 1 1 1)
   (cond
-   (Mouse/isButtonDown 0) (Mouse/setGrabbed true)
-   (Mouse/isButtonDown 1) (Mouse/setGrabbed false)))
+   (Mouse/isButtonDown 0) (Mouse/setGrabbed false)
+   (Mouse/isButtonDown 1) (Mouse/setGrabbed false)
+   (Mouse/isButtonDown 2) (println "Mouse button 2 down")))
 
 (defn draw-models []
   (GL20/glUseProgram @program)
-  (draw-vertices)
+  (draw-axes)
   (draw-container-cube)
   (draw-rectangle)
   (GL20/glUseProgram 0))
 
+(defn draw-textured-panel []
+  (do-shape GL11/GL_QUADS
+            (GL11/glTexCoord2f 1 0)
+            (GL11/glVertex3f 1 0 0)
+            (GL11/glTexCoord2f 0 0)
+            (GL11/glVertex3f 0 0 0)
+            (GL11/glTexCoord2f 0 1)
+            (GL11/glVertex3f 0 1 0)
+            (GL11/glTexCoord2f 1 1)
+            (GL11/glVertex3f 1 1 0)))
+
 (defn draw-textured-model []
-  (GL11/glBegin GL11/GL_QUADS)
-  (GL11/glTexCoord2f 1 0)
-  (GL11/glVertex3f 1 0 0)
-  (GL11/glTexCoord2f 0 0)
-  (GL11/glVertex3f 0 0 0)
-  (GL11/glTexCoord2f 0 1)
-  (GL11/glVertex3f 0 1 0)
-  (GL11/glTexCoord2f 1 1)
-  (GL11/glVertex3f 1 1 0)
-  (GL11/glEnd))
+  ;; face
+  (draw-textured-panel)
+
+  ;; back
+  (drawing-object
+   (GL11/glTranslatef 0 0 -1)
+   (draw-textured-panel))
+
+  ;; ;; left
+  (drawing-object
+   (GL11/glRotatef 90 0 1 0)
+   (draw-textured-panel))
+
+  ;; ;; right
+  (drawing-object
+   (GL11/glTranslatef 1 0 0)
+   (GL11/glRotatef 90 0 1 0)
+   (draw-textured-panel))
+
+  ;; back
+  (drawing-object
+   (GL11/glRotatef -90 1 0 0)
+   (draw-textured-panel))
+
+  ;; ;; top
+  (drawing-object
+   (GL11/glTranslatef 0 1 0)
+   (GL11/glRotatef -90 1 0 0)
+   (draw-textured-panel)))
 
 (defn draw []
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
