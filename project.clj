@@ -8,7 +8,9 @@
                  [shadertone/lwjgl-natives "2.9.0"]
                  [kephale/lwjgl "2.9.0"]
                  [slick-util "1.0.0"]
-                 [oskar/lwjgl_util "1.0"]]
+                 [oskar/lwjgl_util "1.0"]
+                 [org.clojars.charles-stain/jbullet "3.0"]
+                 [org.clojars.nakkaya/vecmath "1"]]
 
   :main ^:skip-aot try-lwjgl.core
   :target-path "target/%s"
