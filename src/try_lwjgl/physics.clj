@@ -54,10 +54,11 @@
   (let [position (.origin (.getWorldTransform (.getMotionState body) (Transform.)))]
     [(.x position) (.y position) (.z position)]))
 
-(let [everything (build-world-with-objects)
-      world (:world everything)
-      ball (:ball everything)]
-  (doseq [i (range 100)]
-    (.stepSimulation world 0.1 20)
-    (println "position:" (get-position ball))
-    (Thread/sleep 50)))
+(defn run-simulation []
+  (let [everything (build-world-with-objects)
+        world (:world everything)
+        ball (:ball everything)]
+    (doseq [i (range 100)]
+     (.stepSimulation world 0.1 20)
+      (println "position:" (get-position ball))
+      (Thread/sleep 50))))
