@@ -161,9 +161,18 @@
 
 (defn draw-axes []
   (with-shader-program
-    (with-pushed-matrix
+    ;; Height markers
+    (doseq [n (range 10)]
+      (with-pushed-matrix
+        ;; x-axis (red)
+        (GL11/glColor3f 1 0 0)
+        (GL11/glTranslatef 0 n 0)
+        (do-shape GL11/GL_LINE_STRIP
+                  (GL11/glVertex3f -10 0 0)
+                  (GL11/glVertex3f 10 0 0))))
 
-     ;;(GL11/glTranslatef -1.5 0.0 0.0)
+
+    (with-pushed-matrix
 
      (GL11/glScaled 4.0 4.0 4.0)
 
@@ -255,14 +264,6 @@
      (.getZ position-buf)
      (float 1)]))
 
-(defn handle-input []
-  (.processMouse @camera 1 80 -80)
-  (.processKeyboard @camera 16 1 1 1)
-  (cond
-   (Mouse/isButtonDown 0) (Mouse/setGrabbed false)
-   (Mouse/isButtonDown 1) (Mouse/setGrabbed false)
-   (Mouse/isButtonDown 2) (println "Mouse button 2 down")))
-
 (defn draw-block [draw-panel]
     ;; face
   (draw-panel)
@@ -319,6 +320,16 @@
     @world
     (swap! world (fn [_] (physics/build-world-with-objects)))))
 
+(defn reset-ball []
+  (println "reset-ball")
+  (let [w (world-and-objects)
+        ball (:ball w)]
+    ;; This doesn't work
+    ;; (set! (.x ball) 0.0)
+    ;; (set! (.y ball) 35.0)
+    ;; (set! (.z ball) 0.0)
+    ))
+
 (defn draw-sphere []
   (let [sphere (Sphere.)
         w (world-and-objects)
@@ -348,6 +359,22 @@
   (draw-models)
   
   (exitOnGLError "Error in draw"))
+
+(defn handle-input []
+  (.processMouse @camera 1 80 -80)
+  (.processKeyboard @camera 16 1 1 1)
+  (loop []
+      (when (Keyboard/next)
+        (when (Keyboard/getEventKeyState)
+          (let [key (Keyboard/getEventKey)]
+            (cond
+             (= key Keyboard/KEY_B) (reset-ball)
+              :else nil)))
+        (recur)))
+  (cond
+   (Mouse/isButtonDown 0) (Mouse/setGrabbed false)
+   (Mouse/isButtonDown 1) (Mouse/setGrabbed false)
+   (Mouse/isButtonDown 2) (println "Mouse button 2 down")))
 
 (defn iteration [delta]
   (let [world (:world (world-and-objects))]

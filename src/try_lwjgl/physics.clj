@@ -20,7 +20,9 @@
     world))
 
 (defn build-ground []
-  (let [groundShape (StaticPlaneShape. (Vector3f. 0 1 0) 0.25)
+  (let [normal (Vector3f. 0 1 0) ; Direction plane is facing
+        plane-constant 0.0       ; Padding thickness above plane
+        groundShape (StaticPlaneShape. normal plane-constant)
         groundMotionState (DefaultMotionState. (Transform. (Matrix4f.
                                                             (Quat4f. 0 0 0 1)
                                                             (Vector3f. 0 0 0)
@@ -30,8 +32,11 @@
     (RigidBody. groundBodyConstructionInfo)))
 
 (defn build-ball []
-  (let [ballShape (SphereShape. 3.0)
-        default-ball-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1) (Vector3f. 0 35 0) 1.0))
+  (let [ballShape (SphereShape. 1.0)
+        default-ball-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
+                                                      ;; Starting position
+                                                      (Vector3f. 0 5 0)
+                                                      1.0))
         ballMotionState (DefaultMotionState. default-ball-transform)
         ballInertia (Vector3f. 0 0 0)
         _ (.calculateLocalInertia ballShape 2.5 ballInertia)
