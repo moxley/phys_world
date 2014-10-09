@@ -1,7 +1,7 @@
 (ns try-lwjgl.physics
   (:import [com.bulletphysics.collision.broadphase BroadphaseInterface DbvtBroadphase]
            [com.bulletphysics.collision.dispatch CollisionConfiguration CollisionDispatcher CollisionObject DefaultCollisionConfiguration]
-           [com.bulletphysics.collision.shapes CollisionShape SphereShape StaticPlaneShape]
+           [com.bulletphysics.collision.shapes CollisionShape SphereShape CapsuleShape StaticPlaneShape]
            [com.bulletphysics.dynamics DiscreteDynamicsWorld DynamicsWorld RigidBody RigidBodyConstructionInfo]
            [com.bulletphysics.dynamics.constraintsolver ConstraintSolver SequentialImpulseConstraintSolver]
            [com.bulletphysics.linearmath DefaultMotionState MotionState Transform]
@@ -46,6 +46,22 @@
         ball (RigidBody. ballConstructionInfo)
         _ (.setActivationState ball CollisionObject/DISABLE_DEACTIVATION)]
     ball))
+
+(defn build-player []
+  (let [shape (CapsuleShape. 0.25 2.0)
+        default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
+                                                 ;; Starting position
+                                                 (Vector3f. 0 5 10)
+                                                 1.0))
+        motion-state (DefaultMotionState. default-transform)
+        inertia (Vector3f. 0 0 0)
+        _ (.calculateLocalInertia shape 2.5 inertia)
+        construction-info (RigidBodyConstructionInfo. 2.5 motion-state shape inertia)
+        _ (set! (.restitution construction-info) 0.25)
+        _ (set! (.angularDamping construction-info) 0.95)
+        body (RigidBody. construction-info)
+        _ (.setActivationState body CollisionObject/DISABLE_DEACTIVATION)]
+    body))
 
 (defn build-world-with-objects []
   (let [world (build-world)
