@@ -1,4 +1,4 @@
-(ns try-lwjgl.model.sphere
+(ns try-lwjgl.model.ball
   (:import [org.lwjgl.opengl GL11]
            [org.lwjgl.util.glu GLU]
            [org.lwjgl.util.glu Sphere])

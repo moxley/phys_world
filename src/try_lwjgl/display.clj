@@ -12,7 +12,7 @@
             [try-lwjgl.model.textured-panel :as textured-panel]
             [try-lwjgl.model.stairs :as stairs]
             [try-lwjgl.model.floor :as floor]
-            [try-lwjgl.model.sphere :as sphere]
+            [try-lwjgl.model.ball :as model.ball]
             [try-lwjgl.model.container-cube :as container-cube]
             [try-lwjgl.display.util :as util]
             [clojure.java.io :as io]))
@@ -66,7 +66,7 @@
   (container-cube/draw)
   (stairs/draw)
   (floor/draw)
-  (sphere/draw @ball))
+  (model.ball/draw @ball))
 
 (defn draw []
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
@@ -103,5 +103,5 @@
   (setup-opengl WIDTH HEIGHT "alpha")
   (let [w (physics/world-and-objects)
         world (:world w)]
-    (swap! ball (fn [_] (sphere/create world 1.0 [0 5 0]))))
+    (swap! ball (fn [_] (model.ball/create world 1.0 [0 5 0]))))
   (setup-camera))
