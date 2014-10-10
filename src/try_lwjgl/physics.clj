@@ -83,3 +83,10 @@
      (.stepSimulation world 0.1 20)
       (println "position:" (get-position ball))
       (Thread/sleep 50))))
+
+(def world (atom nil))
+
+(defn world-and-objects []
+  (if @world
+    @world
+    (swap! world (fn [_] (build-world-with-objects)))))
