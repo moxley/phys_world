@@ -11,7 +11,7 @@
             [try-lwjgl.model.axes :as axes]
             [try-lwjgl.model.textured-panel :as textured-panel]
             [try-lwjgl.model.stairs :as stairs]
-            [try-lwjgl.model.floor :as floor]
+            [try-lwjgl.model.ground :as model.ground]
             [try-lwjgl.model.ball :as model.ball]
             [try-lwjgl.model.container-cube :as container-cube]
             [try-lwjgl.display.util :as util]
@@ -20,7 +20,9 @@
 (def WIDTH 800)
 (def HEIGHT 600)
 (def camera (atom nil))
+(def world (atom nil))
 (def ball (atom nil))
+(def ground (atom nil))
 
 (defn setup-opengl [width height title]
   (Display/setDisplayMode (DisplayMode. width height))
@@ -65,7 +67,7 @@
   (axes/draw)
   (container-cube/draw)
   (stairs/draw)
-  (floor/draw)
+  (model.ground/draw @ground)
   (model.ball/draw @ball))
 
 (defn draw []
@@ -94,14 +96,13 @@
    (Mouse/isButtonDown 2) (println "Mouse button 2 down")))
 
 (defn iteration [delta]
-  (let [world (:world (physics/world-and-objects))]
-    (.stepSimulation world (* delta 1000.0)))
+  (.stepSimulation @world (* delta 1000.0))
   (draw)
   (handle-input))
 
 (defn init []
   (setup-opengl WIDTH HEIGHT "alpha")
-  (let [w (physics/world-and-objects)
-        world (:world w)]
-    (swap! ball (fn [_] (model.ball/create world 1.0 [0 5 0]))))
+  (swap! world (fn [_] (physics/build-world)))
+  (swap! ball (fn [_] (model.ball/create @world 1.0 [0 5 0])))
+  (swap! ground (fn [_] (model.ground/create @world [0 -10 0])))
   (setup-camera))

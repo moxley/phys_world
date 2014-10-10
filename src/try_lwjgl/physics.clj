@@ -22,13 +22,13 @@
     (.setGravity world (jvec3f 0 (* -1 GRAVITY) 0))
     world))
 
-(defn build-ground []
+(defn build-ground [position]
   (let [normal (jvec3f 0 1 0) ; Direction plane is facing
         plane-constant 0.0       ; Padding thickness above plane
         groundShape (StaticPlaneShape. normal plane-constant)
         groundMotionState (DefaultMotionState. (Transform. (jmatrix4f
                                                             (Quat4f. 0 0 0 1)
-                                                            (jvec3f 0 0 0)
+                                                            (apply jvec3f position)
                                                             (float 1))))
         groundBodyConstructionInfo (RigidBodyConstructionInfo. 0 groundMotionState groundShape (jvec3f 0 0 0))
         _ (set! (.restitution groundBodyConstructionInfo) 0.25)]
@@ -68,28 +68,6 @@
         _ (.setActivationState body CollisionObject/DISABLE_DEACTIVATION)]
     body))
 
-(defn build-world-with-objects []
-  (let [world (build-world)
-        ground (build-ground)]
-    (.addRigidBody world ground)
-    {:world world :ground ground}))
-
 (defn get-position [body]
   (let [position (.origin (.getWorldTransform (.getMotionState body) (Transform.)))]
     [(.x position) (.y position) (.z position)]))
-
-(defn run-simulation []
-  (let [everything (build-world-with-objects)
-        world (:world everything)
-        ball (:ball everything)]
-    (doseq [i (range 100)]
-     (.stepSimulation world 0.1 20)
-      (println "position:" (get-position ball))
-      (Thread/sleep 50))))
-
-(def world (atom nil))
-
-(defn world-and-objects []
-  (if @world
-    @world
-    (swap! world (fn [_] (build-world-with-objects)))))
