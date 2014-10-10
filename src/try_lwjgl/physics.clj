@@ -52,12 +52,12 @@
         _ (.setActivationState ball CollisionObject/DISABLE_DEACTIVATION)]
     ball))
 
-(defn build-player []
+(defn build-player [position]
   (let [shape (CapsuleShape. 0.25 2.0)
         default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
                                                  ;; Starting position
-                                                 (jvec3f 0 5 10)
-                                                 1.0))
+                                                 (apply jvec3f position)
+                                                 (float 1)))
         motion-state (DefaultMotionState. default-transform)
         inertia (jvec3f 0 0 0)
         _ (.calculateLocalInertia shape 2.5 inertia)

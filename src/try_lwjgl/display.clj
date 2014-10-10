@@ -9,8 +9,10 @@
             [try-lwjgl.physics :as physics]
             [try-lwjgl.shader :as shader]
             [try-lwjgl.model.axes :as axes]
+            [try-lwjgl.model.grid :as grid]
             [try-lwjgl.model.textured-panel :as textured-panel]
             [try-lwjgl.model.stairs :as stairs]
+            [try-lwjgl.model.player :as model.player]
             [try-lwjgl.model.ground :as model.ground]
             [try-lwjgl.model.ball :as model.ball]
             [try-lwjgl.model.container-cube :as container-cube]
@@ -20,6 +22,7 @@
 (def WIDTH 800)
 (def HEIGHT 600)
 (def camera (atom nil))
+(def player (atom nil))
 (def world (atom nil))
 (def ball (atom nil))
 (def ground (atom nil))
@@ -65,8 +68,10 @@
 
 (defn draw-models []
   (axes/draw)
+  ;(grid/draw)
   (container-cube/draw)
   (stairs/draw)
+  (model.player/draw @player)
   (model.ground/draw @ground)
   (model.ball/draw @ball))
 
@@ -105,4 +110,5 @@
   (swap! world (fn [_] (physics/build-world)))
   (swap! ball (fn [_] (model.ball/create @world 1.0 [0 5 0])))
   (swap! ground (fn [_] (model.ground/create @world [0 -10 0])))
+  (swap! player (fn [_] (model.player/create @world [-2 2 0])))
   (setup-camera))
