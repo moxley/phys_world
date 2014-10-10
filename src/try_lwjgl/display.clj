@@ -6,27 +6,19 @@
            [org.lwjgl.util.vector Vector4f]
            [org.lwjgl.util.glu Sphere]
            [java.awt Font]
-           [utility Camera EulerCamera EulerCamera$Builder Model OBJLoader]
-           [org.newdawn.slick Color]
-           [org.newdawn.slick.opengl Texture TextureLoader]
-           [org.newdawn.slick.util ResourceLoader])
+           [utility Camera EulerCamera EulerCamera$Builder Model OBJLoader])
   (:require [try-lwjgl.logic :as logic]
             [try-lwjgl.physics :as physics]
             [try-lwjgl.shader :as shader]
+            [try-lwjgl.model.axes :as axes]
+            [try-lwjgl.model.wood-block :as wood-block]
+            [try-lwjgl.model.textured-panel :as textured-panel]
+            [try-lwjgl.display.util :as util]
             [clojure.java.io :as io]))
 
 (def WIDTH 800)
 (def HEIGHT 600)
 (def camera (atom nil))
-(def texture (atom nil))
-
-(defn exitOnGLError [errorMessage]
-  (let [errorValue (GL11/glGetError)]
-    (if (not (=  errorValue GL11/GL_NO_ERROR))
-      (let [errorString (GLU/gluErrorString errorValue)]
-        (.println System/err (str  "ERROR - " errorMessage ": " errorString))
-        (when (Display/isCreated) (Display/destroy))
-        (System/exit -1)))))
 
 (defn setup-opengl [width height title]
   (Display/setDisplayMode (DisplayMode. width height))
@@ -40,14 +32,8 @@
                       (float 0.1)     ;; zNear
                       (float 100.0))  ;; zFar
 
-  ;;
-  ;; Texture support
-  ;;
-  (GL11/glEnable GL11/GL_TEXTURE_2D)
-  ;; enable alpha blending
-  (GL11/glEnable GL11/GL_BLEND)
-  (GL11/glBlendFunc GL11/GL_SRC_ALPHA GL11/GL_ONE_MINUS_SRC_ALPHA)
-  
+  (textured-panel/setup)
+
   (GL11/glShadeModel GL11/GL_SMOOTH)
   (GL11/glClearColor (float 0.0) (float 0.0) (float 0.0) (float 0.0))
   (GL11/glClearDepth (float 1.0))
@@ -57,9 +43,7 @@
 
   (shader/setup)
 
-  (exitOnGLError "Error in setupOpenGL")
-
-  (swap! texture (fn [_]  (TextureLoader/getTexture "JPG" (ResourceLoader/getResourceAsStream "try_lwjgl/mahogany.jpg")))))
+  (util/exit-on-gl-error "Error in setupOpenGL"))
 
 (defn build-camera []
   (.build
@@ -75,126 +59,50 @@
     (.applyOptimalStates)
     (.applyPerspectiveMatrix)))
 
-(defmacro do-shape [type & commands]
-  `(do
-    (GL11/glBegin ~type)
-    ~@commands
-    (GL11/glEnd)))
-
-(defmacro with-pushed-matrix [& commands]
-  `(do
-     (GL11/glPushMatrix)
-     ~@commands
-     (GL11/glPopMatrix)))
-
-(defn draw-textured-panel []
-  (.bind Color/white)
-  (.bind @texture)
-
-  (do-shape GL11/GL_QUADS
-            (GL11/glTexCoord2f 1 0)
-            (GL11/glVertex3f 1 0 0)
-            (GL11/glTexCoord2f 0 0)
-            (GL11/glVertex3f 0 0 0)
-            (GL11/glTexCoord2f 0 1)
-            (GL11/glVertex3f 0 1 0)
-            (GL11/glTexCoord2f 1 1)
-            (GL11/glVertex3f 1 1 0)))
-
-(defn draw-rectangle []
-  (with-pushed-matrix
-   (GL11/glColor3f 1 1 1)
-   (GL11/glTranslatef 0 -10 0)
-   (GL11/glRotatef 90 1 0 0)
-   (draw-textured-panel)))
-
-(def AXIS-WIDTH 0.05)
-
-(defn draw-axes []
-  (shader/with-program
-    ;; Height markers
-    (doseq [n (range 10)]
-      (with-pushed-matrix
-        ;; x-axis (red)
-        (GL11/glColor3f 1 0 0)
-        (GL11/glTranslatef 0 n 0)
-        (do-shape GL11/GL_LINE_STRIP
-                  (GL11/glVertex3f -10 0 0)
-                  (GL11/glVertex3f 10 0 0))))
-
-
-    (with-pushed-matrix
-
-     (GL11/glScaled 4.0 4.0 4.0)
-
-     ;; x-axis (red)
-     (GL11/glColor3f 1.0 0.0 0.0)
-     (do-shape GL11/GL_QUADS
-               (GL11/glVertex3f -1.0 0.0 0.0)
-               (GL11/glVertex3f  1.0 0.0 0.0)
-               (GL11/glVertex3f  1.0 AXIS-WIDTH 0.0)
-               (GL11/glVertex3f -1.0 AXIS-WIDTH 0.0))
-
-     ;; y-axis (green)
-     (GL11/glColor3f 0.0 1.0 0.0)
-     (do-shape GL11/GL_QUADS
-               (GL11/glVertex3f 0.0 -1.0 0.0)
-               (GL11/glVertex3f 0.0  1.0 0.0)
-               (GL11/glVertex3f 0.0  1.0 AXIS-WIDTH)
-               (GL11/glVertex3f 0.0 -1.0 AXIS-WIDTH))
-
-     ;; z-axis (blue)
-     (GL11/glColor3f 0.0 0.0 1.0)
-     (do-shape GL11/GL_QUADS
-               (GL11/glVertex3f 0.0 0.0 -1.0)
-               (GL11/glVertex3f 0.0 0.0  1.0)
-               (GL11/glVertex3f 0.0 AXIS-WIDTH  1.0)
-               (GL11/glVertex3f 0.0 AXIS-WIDTH -1.0)))))
-
 (defn draw-container-cube []
   (shader/with-program
-    (with-pushed-matrix
+    (util/with-pushed-matrix
      (GL11/glScaled 10.0 10.0 10.0)
      (GL11/glLineWidth 2.5)
      (GL11/glColor3f 1.0 0.0 0.0)
 
      ;; Back wall
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f 1 1 -1)
                (GL11/glVertex3f -1 1 -1))
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f -1 1 -1)
                (GL11/glVertex3f -1 -1 -1))
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f -1 -1 -1)
                (GL11/glVertex3f 1 -1 -1))
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f 1 -1 -1)
                (GL11/glVertex3f 1 1 -1))
 
      ;; Front wall
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f 1 1 1)
                (GL11/glVertex3f -1 1 1))
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f -1 1 1)
                (GL11/glVertex3f -1 -1 1))
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f -1 -1 1)
                (GL11/glVertex3f 1 -1 1))
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f 1 -1 1)
                (GL11/glVertex3f 1 1 1))
 
      ;; Left wall
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f -1 -1 -1)
                (GL11/glVertex3f -1 -1 1)
                (GL11/glVertex3f -1 1 1)
                (GL11/glVertex3f -1 1 -1))
 
      ;; Right wall
-     (do-shape GL11/GL_LINES
+     (util/do-shape GL11/GL_LINES
                (GL11/glVertex3f 1 -1 -1)
                (GL11/glVertex3f 1 -1 1)
                (GL11/glVertex3f 1 1 1)
@@ -215,54 +123,20 @@
      (.getZ position-buf)
      (float 1)]))
 
-(defn draw-block [draw-panel]
-    ;; face
-  (draw-panel)
-
-  ;; back
-  (with-pushed-matrix
-   (GL11/glTranslatef 0 0 -1)
-   (draw-panel))
-
-  ;; ;; left
-  (with-pushed-matrix
-   (GL11/glRotatef 90 0 1 0)
-   (draw-panel))
-
-  ;; right
-  (with-pushed-matrix
-   (GL11/glTranslatef 1 0 0)
-   (GL11/glRotatef 90 0 1 0)
-   (draw-panel))
-
-  ;; back
-  (with-pushed-matrix
-   (GL11/glRotatef -90 1 0 0)
-   (draw-panel))
-
-  ;; ;; top
-  (with-pushed-matrix
-   (GL11/glTranslatef 0 1 0)
-   (GL11/glRotatef -90 1 0 0)
-   (draw-panel)))
-
-(defn draw-textured-block []
-  (draw-block draw-textured-panel))
-
 (defn draw-stairs []
   (doseq [side [0 1 2 3]]
     (doseq [up [0 1 2]]
-      (with-pushed-matrix
+      (util/with-pushed-matrix
        (GL11/glTranslatef side up (* -1.0 up))
-       (draw-textured-block)))))
+       (wood-block/draw)))))
 
 (defn draw-floor []
   (doseq [x (range -10 10)
           z (range -10 10)]
-    (with-pushed-matrix
+    (util/with-pushed-matrix
      (GL11/glTranslatef x -10 z)
      (GL11/glRotatef 90 1 0 0)
-     (draw-textured-panel))))
+     (textured-panel/draw))))
 
 (def world (atom nil))
 
@@ -288,7 +162,7 @@
         ground (:ground w)
         world (:world w)
         pos (physics/get-position ball)]
-    (with-pushed-matrix
+    (util/with-pushed-matrix
      (shader/with-program
        (GL11/glTranslatef (pos 0) (pos 1) (pos 2))
        (.setDrawStyle sphere GLU/GLU_SILHOUETTE)
@@ -296,7 +170,7 @@
        (.draw sphere 1.0 30 30)))))
 
 (defn draw-models []
-  (draw-axes)
+  (axes/draw)
   (draw-container-cube)
   (draw-stairs)
   (draw-floor)
@@ -309,7 +183,7 @@
 
   (draw-models)
   
-  (exitOnGLError "Error in draw"))
+  (util/exit-on-gl-error "Error in draw"))
 
 (defn handle-input []
   (.processMouse @camera 1 80 -80)
