@@ -6,16 +6,26 @@
             [try-lwjgl.physics :as physics]
             [try-lwjgl.shader :as shader]))
 
-(defn draw []
-  (let [sphere (Sphere.)
-        w (physics/world-and-objects)
-        ball (:ball w)
-        ground (:ground w)
-        world (:world w)
-        pos (physics/get-position ball)]
+(defn gl-translatef [x y z] (GL11/glTranslatef x y z))
+
+(defn create [world radius position]
+  (let [phys-ball (physics/build-ball radius position)
+        specs {:radius (atom radius)
+               :position (atom position)
+               :phys phys-ball
+               :world world}]
+    (.addRigidBody world phys-ball)
+    specs))
+
+(defn draw [ball]
+  (let [phys-ball (:phys ball)
+        radius (deref (:radius ball))
+        sphere (Sphere.)
+        pos (physics/get-position phys-ball)]
     (util/with-pushed-matrix
      (shader/with-program
-       (GL11/glTranslatef (pos 0) (pos 1) (pos 2))
+       (apply gl-translatef pos)
        (.setDrawStyle sphere GLU/GLU_SILHOUETTE)
        (GL11/glColor4f 0 0.6 0 1)
-       (.draw sphere 1.0 30 30)))))
+       (.draw sphere radius 30 30)))
+    (swap! (:position ball) (fn [_] pos))))

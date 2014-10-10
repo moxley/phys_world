@@ -10,35 +10,40 @@
 
 (def GRAVITY 10)
 
+(defn jmatrix4f [q v m] (Matrix4f. q v m))
+(defn jvec3f [x y z] (Vector3f. (float x) (float y) (float z)))
+
 (defn build-world []
   (let [broadphase (DbvtBroadphase.)
         collisionConfiguration (DefaultCollisionConfiguration.)
         dispatcher (CollisionDispatcher. collisionConfiguration)
         solver     (SequentialImpulseConstraintSolver.)
         world      (DiscreteDynamicsWorld. dispatcher broadphase solver collisionConfiguration)]
-    (.setGravity world (Vector3f. 0 (* -1 GRAVITY) 0))
+    (.setGravity world (jvec3f 0 (* -1 GRAVITY) 0))
     world))
 
 (defn build-ground []
-  (let [normal (Vector3f. 0 1 0) ; Direction plane is facing
+  (let [normal (jvec3f 0 1 0) ; Direction plane is facing
         plane-constant 0.0       ; Padding thickness above plane
         groundShape (StaticPlaneShape. normal plane-constant)
-        groundMotionState (DefaultMotionState. (Transform. (Matrix4f.
+        groundMotionState (DefaultMotionState. (Transform. (jmatrix4f
                                                             (Quat4f. 0 0 0 1)
-                                                            (Vector3f. 0 0 0)
-                                                            1.0)))
-        groundBodyConstructionInfo (RigidBodyConstructionInfo. 0 groundMotionState groundShape (Vector3f. 0 0 0))
+                                                            (jvec3f 0 0 0)
+                                                            (float 1))))
+        groundBodyConstructionInfo (RigidBodyConstructionInfo. 0 groundMotionState groundShape (jvec3f 0 0 0))
         _ (set! (.restitution groundBodyConstructionInfo) 0.25)]
     (RigidBody. groundBodyConstructionInfo)))
 
-(defn build-ball []
-  (let [ballShape (SphereShape. 1.0)
+(defn build-ball [radius position]
+  (let [ballShape (SphereShape. radius)
+        p (vec (map #(float %) position))
         default-ball-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
-                                                      ;; Starting position
-                                                      (Vector3f. 0 5 0)
-                                                      1.0))
+                                                      ;; Starting
+                                                      ;; position
+                                                      (apply jvec3f p)
+                                                      (float 1)))
         ballMotionState (DefaultMotionState. default-ball-transform)
-        ballInertia (Vector3f. 0 0 0)
+        ballInertia (jvec3f 0 0 0)
         _ (.calculateLocalInertia ballShape 2.5 ballInertia)
         ballConstructionInfo (RigidBodyConstructionInfo. 2.5 ballMotionState ballShape ballInertia)
         _ (set! (.restitution ballConstructionInfo) 0.5)
@@ -51,10 +56,10 @@
   (let [shape (CapsuleShape. 0.25 2.0)
         default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
                                                  ;; Starting position
-                                                 (Vector3f. 0 5 10)
+                                                 (jvec3f 0 5 10)
                                                  1.0))
         motion-state (DefaultMotionState. default-transform)
-        inertia (Vector3f. 0 0 0)
+        inertia (jvec3f 0 0 0)
         _ (.calculateLocalInertia shape 2.5 inertia)
         construction-info (RigidBodyConstructionInfo. 2.5 motion-state shape inertia)
         _ (set! (.restitution construction-info) 0.25)
@@ -65,11 +70,9 @@
 
 (defn build-world-with-objects []
   (let [world (build-world)
-        ground (build-ground)
-        ball (build-ball)]
+        ground (build-ground)]
     (.addRigidBody world ground)
-    (.addRigidBody world ball)
-    {:world world :ball ball}))
+    {:world world :ground ground}))
 
 (defn get-position [body]
   (let [position (.origin (.getWorldTransform (.getMotionState body) (Transform.)))]

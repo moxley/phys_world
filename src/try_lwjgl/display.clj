@@ -20,6 +20,7 @@
 (def WIDTH 800)
 (def HEIGHT 600)
 (def camera (atom nil))
+(def ball (atom nil))
 
 (defn setup-opengl [width height title]
   (Display/setDisplayMode (DisplayMode. width height))
@@ -65,7 +66,7 @@
   (container-cube/draw)
   (stairs/draw)
   (floor/draw)
-  (sphere/draw))
+  (sphere/draw @ball))
 
 (defn draw []
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
@@ -100,4 +101,7 @@
 
 (defn init []
   (setup-opengl WIDTH HEIGHT "alpha")
+  (let [w (physics/world-and-objects)
+        world (:world w)]
+    (swap! ball (fn [_] (sphere/create world 1.0 [0 5 0]))))
   (setup-camera))
