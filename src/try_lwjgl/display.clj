@@ -1,24 +1,22 @@
 (ns try-lwjgl.display
   ;;(:gen-class)
-  (:import [org.lwjgl.opengl Display DisplayMode GL11 GL15 GL20]
+  (:import [org.lwjgl.opengl Display DisplayMode GL11]
            [org.lwjgl.input Mouse Keyboard]
            [org.lwjgl.util.glu GLU]
            [org.lwjgl.util.vector Vector4f]
-           [org.lwjgl BufferUtils]
            [org.lwjgl.util.glu Sphere]
            [java.awt Font]
-           [java.nio.charset Charset]
            [utility Camera EulerCamera EulerCamera$Builder Model OBJLoader]
            [org.newdawn.slick Color]
            [org.newdawn.slick.opengl Texture TextureLoader]
            [org.newdawn.slick.util ResourceLoader])
   (:require [try-lwjgl.logic :as logic]
             [try-lwjgl.physics :as physics]
+            [try-lwjgl.shader :as shader]
             [clojure.java.io :as io]))
 
 (def WIDTH 800)
 (def HEIGHT 600)
-(def program (atom nil))
 (def camera (atom nil))
 (def texture (atom nil))
 
@@ -30,49 +28,12 @@
         (when (Display/isCreated) (Display/destroy))
         (System/exit -1)))))
 
-(defn printLogInfo [obj]
-  (let [infoLog (BufferUtils/createByteBuffer 2048)
-        lengthBuffer (BufferUtils/createIntBuffer 1)
-        _ (GL20/glGetShaderInfoLog obj lengthBuffer infoLog)
-        infoBytes (byte-array (.get lengthBuffer))]
-    (.get infoLog infoBytes)
-    (if (= (count infoBytes) 0)
-      nil ; return
-      (.println System/err (String. infoBytes (Charset/forName "ISO-8859-1"))))))
-
-(defn toByteBuffer [data]
-  (let [vertexShaderData (.getBytes data (Charset/forName "ISO-8859-1"))
-        vertexShader (BufferUtils/createByteBuffer (count vertexShaderData))]
-    (.put vertexShader vertexShaderData)
-    (.flip vertexShader)
-    vertexShader))
-
-(defn setup-vertex-shader [program]
-  (let [vertexShaderId (GL20/glCreateShader GL20/GL_VERTEX_SHADER)]
-    (GL20/glShaderSource vertexShaderId (toByteBuffer (slurp (io/file (io/resource "try_lwjgl/shader.vs")))))
-    (GL20/glCompileShader vertexShaderId)
-    (when (= (GL20/glGetShader vertexShaderId GL20/GL_COMPILE_STATUS) GL11/GL_FALSE)
-      (printLogInfo vertexShaderId)
-      (System/exit -1))
-    (GL20/glAttachShader program vertexShaderId)))
-
-(defn setup-fragment-shader [program]
-  (let [fragmentShaderId (GL20/glCreateShader GL20/GL_FRAGMENT_SHADER)]
-    (GL20/glShaderSource fragmentShaderId (toByteBuffer (slurp (io/file (io/resource "try_lwjgl/shader.fs")))))
-    (GL20/glCompileShader fragmentShaderId)
-    (when (= (GL20/glGetShader fragmentShaderId GL20/GL_COMPILE_STATUS) GL11/GL_FALSE) 
-      (printLogInfo fragmentShaderId)
-      (System/exit -1))
-    (GL20/glAttachShader program fragmentShaderId)))
-
 (defn setup-opengl [width height title]
   (Display/setDisplayMode (DisplayMode. width height))
   (Display/setVSyncEnabled true)
   (Display/setTitle title)
   (Display/create)
   (println "OpenGL Version:" (GL11/glGetString GL11/GL_VERSION))
-
-  (swap! program (fn [_] (GL20/glCreateProgram)))
 
   (GLU/gluPerspective (float 45.0) ;; fovy
                       (/ (float WIDTH) (float HEIGHT)) ;; aspect
@@ -94,12 +55,8 @@
   (GL11/glDepthFunc GL11/GL_LEQUAL)
   (GL11/glHint GL11/GL_PERSPECTIVE_CORRECTION_HINT GL11/GL_NICEST)
 
-  ;; Create and attach shaders to program
-  (setup-vertex-shader @program)
-  (setup-fragment-shader @program)
+  (shader/setup)
 
-  (GL20/glLinkProgram @program)
-  (GL20/glValidateProgram @program)
   (exitOnGLError "Error in setupOpenGL")
 
   (swap! texture (fn [_]  (TextureLoader/getTexture "JPG" (ResourceLoader/getResourceAsStream "try_lwjgl/mahogany.jpg")))))
@@ -153,14 +110,8 @@
 
 (def AXIS-WIDTH 0.05)
 
-(defmacro with-shader-program [& commands]
-  `(do
-     (GL20/glUseProgram @program)
-     ~@commands
-     (GL20/glUseProgram 0)))
-
 (defn draw-axes []
-  (with-shader-program
+  (shader/with-program
     ;; Height markers
     (doseq [n (range 10)]
       (with-pushed-matrix
@@ -201,7 +152,7 @@
                (GL11/glVertex3f 0.0 AXIS-WIDTH -1.0)))))
 
 (defn draw-container-cube []
-  (with-shader-program
+  (shader/with-program
     (with-pushed-matrix
      (GL11/glScaled 10.0 10.0 10.0)
      (GL11/glLineWidth 2.5)
@@ -338,7 +289,7 @@
         world (:world w)
         pos (physics/get-position ball)]
     (with-pushed-matrix
-     (with-shader-program
+     (shader/with-program
        (GL11/glTranslatef (pos 0) (pos 1) (pos 2))
        (.setDrawStyle sphere GLU/GLU_SILHOUETTE)
        (GL11/glColor4f 0 0.6 0 1)
