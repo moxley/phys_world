@@ -71,3 +71,30 @@
 (defn get-position [body]
   (let [position (.origin (.getWorldTransform (.getMotionState body) (Transform.)))]
     [(.x position) (.y position) (.z position)]))
+
+(defn apply-force [camera ball]
+  (let [;; Retrieve the controllable ball's location.
+        controlBallTransform (Transform.)
+        controlBall (:phys ball)
+        motionState (.getMotionState controlBall)
+        ;; Mutates controlBallTransform
+        _ (.getWorldTransform motionState controlBallTransform)
+        controlBallLocation (.origin controlBallTransform)
+        cameraPosition (Vector3f. (.x camera) (.y camera) (.z camera))
+        ;; Calculate the force that is applied to the controllable ball as following:
+        ;; force = cameraPosition - controlBallLocation
+        force (Vector3f.)]
+    (.sub force cameraPosition controlBallLocation)
+    (.scale force (float 5))
+    ;; Wake the controllable ball if it is sleeping.
+    (.activate controlBall true)
+    ;; Apply the force to the controllable ball.
+    (.applyCentralForce controlBall force)))
+
+(defn reset-body [body position]
+  (let [default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
+                                                 (apply jvec3f position)
+                                                 (float 1)))]
+    (.setCenterOfMassTransform body default-transform)
+    (.setAngularVelocity body (jvec3f 0 0 0))
+    (.setLinearVelocity body (jvec3f 0 0 0))))
