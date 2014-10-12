@@ -8,8 +8,10 @@
 
 (defn gl-translatef [x y z] (GL11/glTranslatef x y z))
 
+(def player-radius (float 1))
+
 (defn create [world position]
-  (let [phys-player (physics/build-player position)
+  (let [phys-player (physics/build-player player-radius position)
         specs {:position (atom position)
                :phys phys-player
                :world world}]
@@ -25,5 +27,5 @@
        (apply gl-translatef pos)
        (.setDrawStyle sphere GLU/GLU_SILHOUETTE)
        (GL11/glColor4f 1 0 0 1)
-       (.draw sphere 0.5 30 30)))
+       (.draw sphere player-radius 30 30)))
     (swap! (:position player) (fn [_] pos))))
