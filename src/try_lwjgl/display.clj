@@ -7,6 +7,7 @@
            [javax.vecmath Matrix4f Quat4f Vector3f])
   (:require [try-lwjgl.logic :as logic]
             [try-lwjgl.physics :as physics]
+            [try-lwjgl.camera :as model.camera]
             [try-lwjgl.shader :as shader]
             [try-lwjgl.model.axes :as axes]
             [try-lwjgl.model.grid :as grid]
@@ -53,19 +54,19 @@
 
   (util/exit-on-gl-error "Error in setupOpenGL"))
 
-(defn build-camera []
-  (.build
-   (doto (EulerCamera$Builder.)
-     (.setAspectRatio
-      (/ (float WIDTH) (float HEIGHT)))
-     (.setRotation (float -1.12) (float 0.16) (float 0))
-     (.setPosition (float -1.38) (float 1.36) (float 7.95))
-     (.setFieldOfView 60))))
+;; (defn build-camera []
+;;   (.build
+;;    (doto (EulerCamera$Builder.)
+;;      (.setAspectRatio
+;;       (/ (float WIDTH) (float HEIGHT)))
+;;      (.setRotation (float -1.12) (float 0.16) (float 0))
+;;      (.setPosition (float -1.38) (float -9) (float 7.95))
+;;      (.setFieldOfView 60))))
 
-(defn setup-camera []
-  (doto (swap! camera (fn [_] (build-camera)))
-    (.applyOptimalStates)
-    (.applyPerspectiveMatrix)))
+;; (defn setup-camera []
+;;   (doto (swap! camera (fn [_] (build-camera)))
+;;     (.applyOptimalStates)
+;;     (.applyPerspectiveMatrix)))
 
 (defn draw-models []
   (axes/draw)
@@ -93,10 +94,9 @@
     translated))
 
 (defn set-pointer []
-  (let [c @camera
-        pointer (get-pointer)
-        camera-pos [(.x c) (.y c) (.z c)]
-        orientation [(.pitch c) (.yaw c) (.roll c)]
+  (let [pointer (get-pointer)
+        camera-pos (model.camera/position)
+        orientation (model.camera/orientation)
         new-pos (calc-pointer-loc camera-pos orientation)]
     (physics/reset-body (:phys pointer) new-pos)))
 
@@ -105,26 +105,26 @@
 
 (defn move-player []
   (let [p @player
-        c @camera
-        camera-pos [(.x c) (.y c) (.z c)]]
+        camera-pos (model.camera/position)]
     (physics/reset-body (:phys p) camera-pos)))
 
 (defn draw []
   (GL11/glClear (bit-or GL11/GL_COLOR_BUFFER_BIT GL11/GL_DEPTH_BUFFER_BIT))
   (GL11/glLoadIdentity)
-  (.applyTranslations @camera)
+
+  ;;(.applyTranslations @camera)
+  (model.camera/point @player)
 
   (draw-models)
 
   ;; (draw-pointer)
   ;; (set-pointer)
-  (move-player)
-  
+  ;;(move-player)
+
   (util/exit-on-gl-error "Error in draw"))
 
-(defn handle-input []
-  (.processMouse @camera 1 80 -80)
-  (.processKeyboard @camera 16 1 1 1)
+(defn handle-input [delta]
+  (model.player/logic delta @player)
   (loop []
       (when (Keyboard/next)
         (when (Keyboard/getEventKeyState)
@@ -138,8 +138,6 @@
              (= key Keyboard/KEY_1) (set-pointer)
              :else nil)))
         (recur)))
-  (when (Keyboard/isKeyDown Keyboard/KEY_B)
-    (physics/apply-force @camera @ball))
   (cond
    (Mouse/isButtonDown 0) (do (println "Mouse button 0 down") (Mouse/setGrabbed true))
    (Mouse/isButtonDown 1) (do (println "Mouse button 1 down") (Mouse/setGrabbed false))
@@ -147,13 +145,18 @@
 
 (defn iteration [delta]
   (.stepSimulation @world (* delta 1000.0))
-  (draw)
-  (handle-input))
+  ;;(.processMouse @camera 1 80 -80)
+  ;;(.processKeyboard @camera 16 1 1 1)
+
+  (handle-input delta)
+  (.stepSimulation @world 0)
+  (draw))
 
 (defn init []
   (setup-opengl WIDTH HEIGHT "alpha")
   (swap! world (fn [_] (physics/build-world)))
   (swap! ball (fn [_] (model.ball/create @world 1.0 [0 5 0])))
   (swap! ground (fn [_] (model.ground/create @world [0 -10 0])))
-  (swap! player (fn [_] (model.player/create @world [-2 2 0])))
-  (setup-camera))
+  (swap! player (fn [_] (model.player/create @world [-2 0 10])))
+  ;;(setup-camera)
+  (model.camera/setup WIDTH HEIGHT))

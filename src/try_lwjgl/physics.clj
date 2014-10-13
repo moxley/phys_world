@@ -63,6 +63,8 @@
         ballInertia (math/jvec3f 0 0 0)
         _ (.calculateLocalInertia ballShape 2.5 ballInertia)
         ballConstructionInfo (RigidBodyConstructionInfo. 2.5 ballMotionState ballShape ballInertia)
+        _ (set! (.linearDamping ballConstructionInfo) 0.1)
+        ;;_ (set! (.additionalDamping ballConstructionInfo) true)
         _ (set! (.restitution ballConstructionInfo) 0.5)
         _ (set! (.angularDamping ballConstructionInfo) 0.95)
         ball (RigidBody. ballConstructionInfo)
@@ -73,24 +75,10 @@
   (let [position (.origin (.getWorldTransform (.getMotionState body) (Transform.)))]
     [(.x position) (.y position) (.z position)]))
 
-(defn apply-force [camera ball]
-  (let [;; Retrieve the controllable ball's location.
-        controlBallTransform (Transform.)
-        controlBall (:phys ball)
-        motionState (.getMotionState controlBall)
-        ;; Mutates controlBallTransform
-        _ (.getWorldTransform motionState controlBallTransform)
-        controlBallLocation (.origin controlBallTransform)
-        cameraPosition (Vector3f. (.x camera) (.y camera) (.z camera))
-        ;; Calculate the force that is applied to the controllable ball as following:
-        ;; force = cameraPosition - controlBallLocation
-        force (Vector3f.)]
-    (.sub force cameraPosition controlBallLocation)
-    (.scale force (float 5))
-    ;; Wake the controllable ball if it is sleeping.
-    (.activate controlBall true)
-    ;; Apply the force to the controllable ball.
-    (.applyCentralForce controlBall force)))
+(defn get-direction [body]
+  (let [trans (.getWorldTransform (.getMotionState body))
+        quat4f (.getRotation (Quat4f.))]
+    [(.x quat4f) (.y quat4f) (.z quat4f)]))
 
 (defn reset-body [body position]
   (let [default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)

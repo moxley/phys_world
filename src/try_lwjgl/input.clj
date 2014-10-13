@@ -12,7 +12,7 @@
   (let [[code-str name] (clojure.string/split line (re-pattern " "))
         code (Integer/parseInt code-str)
         key (keyword name)]
-    (assoc key-map code key)))
+    (conj key-map {code key, key code})))
 
 (defn load-key-codes []
   (with-open [rdr (clojure.java.io/reader "key_codes.txt")]
@@ -37,6 +37,11 @@
 
 (defn key-state? []
   (Keyboard/getEventKeyState))
+
+(defn key-down? [key]
+  (let [key-map (get-key-map)
+        code (key-map key)]
+    (Keyboard/isKeyDown code)))
 
 (defn collect-current-event
   [key-events key-code down? repeat-event?]
