@@ -8,6 +8,7 @@
             [try-lwjgl.physics :as physics]
             [try-lwjgl.shader :as shader]
             [try-lwjgl.display.util :as util]
+            [try-lwjgl.math :as math]
             [clojure.java.io :as io]))
 
 (def fov 90)
@@ -27,14 +28,6 @@
       (GLU/gluPerspective fov aspect-ratio zNear zFar)
       (GL11/glPopAttrib)))
 
-(defn position []
-  (let [c @camera]
-    [(.x c) (.y c) (.z c)]))
-
-(defn orientation []
-  (let [c @camera]
-    [(.pitch c) (.yaw c) (.roll c)]))
-
 (defn set-aspect-ratio [])
 (defn set-rotation [])
 
@@ -48,17 +41,13 @@
      (.setFieldOfView 60))))
 
 (defn setup [width height]
-  ;;(swap! camera (fn [_] (build-camera width height)))
   (apply-optimal-states)
   (apply-perspective-matrix width height))
 
 (defn point [player]
   (let [phys (player :phys)
         player-pos (physics/get-position phys)
-        dir (physics/get-direction phys)
-        pitch 0
-        yaw 0
-        roll 0
+        [pitch yaw roll] (deref (:orientation player))
         [x y z] player-pos]
     (GL11/glPushAttrib GL11/GL_TRANSFORM_BIT)
     (GL11/glMatrixMode GL11/GL_MODELVIEW)

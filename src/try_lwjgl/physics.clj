@@ -6,7 +6,7 @@
            [com.bulletphysics.dynamics.constraintsolver ConstraintSolver SequentialImpulseConstraintSolver]
            [com.bulletphysics.linearmath DefaultMotionState MotionState Transform]
            [org.lwjgl.util.glu GLU Sphere]
-           [javax.vecmath Matrix4f Quat4f Vector3f Vector4f])
+           [javax.vecmath Matrix4f Quat4f Vector3f Vector4f AxisAngle4f])
   (:require [try-lwjgl.math :as math]))
 
 (def GRAVITY 10)
@@ -75,10 +75,8 @@
   (let [position (.origin (.getWorldTransform (.getMotionState body) (Transform.)))]
     [(.x position) (.y position) (.z position)]))
 
-(defn get-direction [body]
-  (let [trans (.getWorldTransform (.getMotionState body))
-        quat4f (.getRotation (Quat4f.))]
-    [(.x quat4f) (.y quat4f) (.z quat4f)]))
+(defn axis-angle-4f [x y z a]
+  (AxisAngle4f. x y z a))
 
 (defn reset-body [body position]
   (let [default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)

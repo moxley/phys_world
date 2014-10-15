@@ -18,12 +18,13 @@
 (defn create [world position]
   (let [phys-player (physics/build-player player-radius position)
         specs {:position (atom position)
+               :orientation (atom [0 0 0])
                :phys phys-player
                :world world}]
     (.addRigidBody world phys-player)
     specs))
 
-(defn logic [delta player]
+(defn movement [delta player]
   (let [forward?    (input/key-down? :w)
         backward?  (input/key-down? :s)
         left?  (input/key-down? :a)
@@ -46,8 +47,19 @@
         z (+ (orig-pos 2) dz)]
     ;; Move player phys
     (.applyDamping (:phys player) 0.5)
-    (.applyCentralImpulse (:phys player) force)
-    ))
+    (.applyCentralImpulse (:phys player) force)))
+
+(defn orientation [delta player]
+  (let [d-angle (/ (input/mouse-dx) 10.0)
+        orientation (deref (:orientation player))
+        [pitch yaw roll] orientation
+        new-yaw (+ yaw d-angle)
+        new-orientation [pitch new-yaw roll]]
+    (swap! (:orientation player) (fn [_] new-orientation))))
+
+(defn logic [delta player]
+  (movement delta player)
+  (orientation delta player))
 
 (defn draw [player]
   (let [phys-player (:phys player)
