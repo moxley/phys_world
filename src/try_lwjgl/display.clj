@@ -35,10 +35,9 @@
   (Display/create)
   (println "OpenGL Version:" (GL11/glGetString GL11/GL_VERSION))
 
-  (GLU/gluPerspective (float 45.0) ;; fovy
-                      (/ (float WIDTH) (float HEIGHT)) ;; aspect
-                      (float 0.1)     ;; zNear
-                      (float 100.0))  ;; zFar
+  (model.camera/apply-perspective WIDTH HEIGHT)
+
+  ;;(GL11/glMatrixMode GL11/GL_MODELVIEW)
 
   (textured-panel/setup)
 
@@ -108,5 +107,4 @@
   (swap! world (fn [_] (physics/build-world)))
   (swap! ball (fn [_] (model.ball/create @world 1.0 [0 5 0])))
   (swap! ground (fn [_] (model.ground/create @world [0 -10 0])))
-  (swap! player (fn [_] (model.player/create @world [-2 0 10])))
-  (model.camera/setup WIDTH HEIGHT))
+  (swap! player (fn [_] (model.player/create @world [-2 0 10]))))

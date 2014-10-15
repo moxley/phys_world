@@ -18,7 +18,7 @@
 (defn create [world position]
   (let [phys-player (physics/build-player player-radius position)
         specs {:position (atom position)
-               :orientation (atom [0 0 0])
+               :orientation (atom [0 180 0])
                :phys phys-player
                :world world}]
     (.addRigidBody world phys-player)
@@ -32,19 +32,14 @@
         up? (input/key-down? :space)
         down? (input/key-down? :lshift)
         strife-normal (+ (if left? -1 0) (if right? 1 0))
-        forward-normal (+ (if forward? -1 0) (if backward? 1 0))
+        forward-normal (+ (if backward? -1 0) (if forward? 1 0))
         up-normal (+ (if up? 1 0) (if down? -1 0))
-        dx (* delta movement-speed strife-normal)
-        dy (* delta movement-speed up-normal)
-        dz (* delta movement-speed forward-normal)
-        fx (* delta movement-force-factor strife-normal)
-        fy (* delta movement-force-factor up-normal)
-        fz (* delta movement-force-factor forward-normal)
-        force (math/jvec3f fx fy fz)
-        orig-pos (physics/get-position (:phys player))
-        x (+ (orig-pos 0) dx)
-        y (+ (orig-pos 1) dy)
-        z (+ (orig-pos 2) dz)]
+        [pitch yaw roll] (map (fn [d] (Math/toRadians d)) (deref (:orientation player)))
+        fx (* strife-normal)
+        fy (* up-normal)
+        fz (* forward-normal)
+        [fx fy fz] (map (fn [v] (* v delta movement-force-factor)) [fx fy fz])
+        force (math/jvec3f fx fy fz)]
     ;; Move player phys
     (.applyDamping (:phys player) 0.5)
     (.applyCentralImpulse (:phys player) force)))
