@@ -24,6 +24,24 @@
     (.addRigidBody world phys-player)
     specs))
 
+(defn unit-movement [right? left? backward? forward? down? up?]
+  "Movement vector from origin position, origin rotation"
+  (let [x (+ (if right? -1 0) (if left? 1 0))
+        y (+ (if down? -1 0) (if up? 1 0))
+        z (+ (if backward? -1 0) (if forward? 1 0))
+        _ (println "x:" x ", y:" y ", z:" z)
+        v (let [v (math/jvec3f x y z)]
+            (when (not (= v (math/jvec3f 0 0 0))) (.normalize v))
+            [(.x v) (.y v) (.z v)])]
+    v))
+
+(defn rotate-vector [v angle]
+  (let [[x0 y0 z0] v
+        x (- (* x0 (Math/cos angle)) (* z0 (Math/sin angle)))
+        y y0
+        z (+ (* x0 (Math/sin angle)) (* z0 (Math/cos angle)))]
+    [x y z]))
+
 (defn movement [delta player]
   (let [forward?    (input/key-down? :w)
         backward?  (input/key-down? :s)
@@ -31,14 +49,11 @@
         right? (input/key-down? :d)
         up? (input/key-down? :space)
         down? (input/key-down? :lshift)
-        strife-normal (+ (if left? -1 0) (if right? 1 0))
-        forward-normal (+ (if backward? -1 0) (if forward? 1 0))
-        up-normal (+ (if up? 1 0) (if down? -1 0))
-        [pitch yaw roll] (map (fn [d] (Math/toRadians d)) (deref (:orientation player)))
-        fx (* strife-normal)
-        fy (* up-normal)
-        fz (* forward-normal)
-        [fx fy fz] (map (fn [v] (* v delta movement-force-factor)) [fx fy fz])
+        m-unit-vector (unit-movement right? left? backward? forward? down? up?)
+        orientation (map (fn [d] (Math/toRadians d)) (deref (:orientation player)))
+        [pitch yaw roll] orientation
+        [mx my mz] (rotate-vector m-unit-vector yaw)
+        [fx fy fz] (map (fn [v] (* v delta movement-force-factor)) [mx my mz])
         force (math/jvec3f fx fy fz)]
     ;; Move player phys
     (.applyDamping (:phys player) 0.5)
