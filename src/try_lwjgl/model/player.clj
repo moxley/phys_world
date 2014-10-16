@@ -60,11 +60,14 @@
     (.applyCentralImpulse (:phys player) force)))
 
 (defn orientation [delta player]
-  (let [d-angle (/ (input/mouse-dx) 10.0)
+  (let [mouse-factor 0.10
+        dx (* (input/mouse-dx) mouse-factor)
+        dy (* -1 (input/mouse-dy) mouse-factor)
         orientation (deref (:orientation player))
         [pitch yaw roll] orientation
-        new-yaw (+ yaw d-angle)
-        new-orientation [pitch new-yaw roll]]
+        new-pitch (+ pitch dy)
+        new-yaw (+ yaw dx)
+        new-orientation [new-pitch new-yaw roll]]
     (swap! (:orientation player) (fn [_] new-orientation))))
 
 (defn logic [delta player]
