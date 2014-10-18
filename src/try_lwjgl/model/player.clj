@@ -74,14 +74,16 @@
   (movement delta player)
   (orientation delta player))
 
+(defn draw-sphere [pos]
+  (let [sphere (Sphere.)]
+    (util/with-pushed-matrix
+      (shader/with-program
+        (apply gl-translatef pos)
+        (.setDrawStyle sphere GLU/GLU_SILHOUETTE)
+        (GL11/glColor4f 1 0 0 1)
+        (.draw sphere player-radius 30 30)))))
+
 (defn draw [player]
   (let [phys-player (:phys player)
-        sphere (Sphere.)
         pos (physics/get-position phys-player)]
-    (util/with-pushed-matrix
-     (shader/with-program
-       (apply gl-translatef pos)
-       (.setDrawStyle sphere GLU/GLU_SILHOUETTE)
-       (GL11/glColor4f 1 0 0 1)
-       (.draw sphere player-radius 30 30)))
-    (swap! (:position player) (fn [_] pos))))
+    (when false (draw-sphere pos))))
