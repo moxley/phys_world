@@ -148,8 +148,3 @@
 (defn init []
   (input/init)
   (print-player))
-
-(defn update [delta]
-  (handle-keyboard)
-  (handle-mouse)
-  (inc-angle))

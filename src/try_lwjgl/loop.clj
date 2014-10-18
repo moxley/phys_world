@@ -1,5 +1,4 @@
 (ns try-lwjgl.loop
-  ;;(:gen-class)
   (:import [org.lwjgl.opengl Display]
            [org.lwjgl Sys])
   (:require [try-lwjgl.logic :as logic]
@@ -16,7 +15,6 @@
 (defn run []
   (while (not (Display/isCloseRequested))
     (let [delta (get-delta)]
-      ;;(logic/update delta)
       (display/iteration delta)
       (Display/update)
       (Display/sync 60)))
