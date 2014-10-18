@@ -4,6 +4,7 @@
 (def key-map (atom nil))
 (def key-listeners (atom []))
 (def key-events (atom []))
+(def mouse-grabbed? (atom false))
 
 ;;
 ;; Key map
@@ -70,13 +71,25 @@
 ;;
 
 (defn set-mouse-grabbed [grabbed?]
-  (Mouse/setGrabbed grabbed?))
+  (when (or (and (not grabbed?) @mouse-grabbed?)
+            (and grabbed? (not @mouse-grabbed?)))
+    (Mouse/setGrabbed grabbed?)
+    (swap! mouse-grabbed? (fn [_] grabbed?))))
 
 (defn mouse-dx []
   (Mouse/getDX))
 
 (defn mouse-dy []
   (Mouse/getDY))
+
+(defn mouse-left-down? []
+  (and (Mouse/isButtonDown 0)
+       (not (key-down? :lcontrol))))
+
+(defn mouse-right-down? []
+  (or (Mouse/isButtonDown 2)
+      (and (Mouse/isButtonDown 0)
+           (key-down? :lcontrol))))
 
 ;;
 ;; Initialize

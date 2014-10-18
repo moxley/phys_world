@@ -29,7 +29,6 @@
   (let [x (+ (if right? -1 0) (if left? 1 0))
         y (+ (if down? -1 0) (if up? 1 0))
         z (+ (if backward? -1 0) (if forward? 1 0))
-        _ (println "x:" x ", y:" y ", z:" z)
         v (let [v (math/jvec3f x y z)]
             (when (not (= v (math/jvec3f 0 0 0))) (.normalize v))
             [(.x v) (.y v) (.z v)])]

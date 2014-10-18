@@ -1,14 +1,10 @@
 (ns try-lwjgl.display
-  (:import [org.lwjgl.opengl Display DisplayMode GL11]
-           [org.lwjgl.input Mouse Keyboard]
-           [org.lwjgl.util.glu GLU]
-           [java.awt Font]
-           [utility Model OBJLoader]
-           [javax.vecmath Matrix4f Quat4f Vector3f])
+  (:import [org.lwjgl.opengl Display DisplayMode GL11])
   (:require [try-lwjgl.logic :as logic]
             [try-lwjgl.physics :as physics]
             [try-lwjgl.camera :as model.camera]
             [try-lwjgl.shader :as shader]
+            [try-lwjgl.input :as input]
             [try-lwjgl.model.axes :as axes]
             [try-lwjgl.model.grid :as grid]
             [try-lwjgl.model.textured-panel :as textured-panel]
@@ -18,7 +14,6 @@
             [try-lwjgl.model.ball :as model.ball]
             [try-lwjgl.model.container-cube :as container-cube]
             [try-lwjgl.display.util :as util]
-            [try-lwjgl.math :as math]
             [clojure.java.io :as io]))
 
 (def WIDTH 800)
@@ -75,25 +70,11 @@
 
 (defn handle-input [delta]
   (model.player/logic delta @player)
-  (loop []
-      (when (Keyboard/next)
-        (when (Keyboard/getEventKeyState)
-          (let [key (Keyboard/getEventKey)]
-            (cond
-             (= key Keyboard/KEY_C) (println "Key C")
-             (= key Keyboard/KEY_R) (do
-                                      (println "Ungrab mouse")
-                                      (Mouse/setGrabbed false)
-                                      (swap! mouse-grabbed? (fn [_] false)))
-             :else nil)))
-        (recur)))
-  (cond
-   (Mouse/isButtonDown 0) (or @mouse-grabbed?
-                              (do
-                                (println "Grab mouse")
-                                (Mouse/setGrabbed true) (swap! mouse-grabbed? (fn [_] true))))
-   (Mouse/isButtonDown 1) (do (println "Mouse button 1 down"))
-   (Mouse/isButtonDown 2) (println "Mouse button 2 down")))
+  (doseq [event (input/collect-key-events)]
+    (let [[key down? repeat?] (map #(event %) [:key :down? :repeat?])]
+      (cond
+       (= :g key) (input/set-mouse-grabbed true)
+       (= :r key) (input/set-mouse-grabbed false)))))
 
 (defn iteration [delta]
   (.stepSimulation @world (* delta 1000.0))
