@@ -2,7 +2,8 @@
   (:import [org.lwjgl.opengl Display]
            [org.lwjgl Sys])
   (:require [try-lwjgl.logic :as logic]
-            [try-lwjgl.display :as display]))
+            [try-lwjgl.display :as display]
+            [try-lwjgl.frame :as frame]))
 
 (def last-frame-time (atom (Sys/getTime)))
 
@@ -15,7 +16,7 @@
 (defn run []
   (while (not (Display/isCloseRequested))
     (let [delta (get-delta)]
-      (display/iteration delta)
+      (frame/iteration delta)
       (Display/update)
       (Display/sync 60)))
   (Display/destroy))
