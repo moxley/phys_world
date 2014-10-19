@@ -19,8 +19,6 @@
 
   (model.camera/apply-perspective WIDTH HEIGHT)
 
-  ;;(GL11/glMatrixMode GL11/GL_MODELVIEW)
-
   (textured-panel/setup)
 
   (GL11/glShadeModel GL11/GL_SMOOTH)

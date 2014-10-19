@@ -13,6 +13,9 @@
 (defn jvtov [vector]
   [(.x vector) (.y vector) (.z vector)])
 
+(defn vector3 [x y z]
+  (Vector3f. (float x) (float y) (float z)))
+
 (defn jmatrix3f
   ([] (Matrix3f.))
   ([m00 m01 m02 m10 m11 m12 m20 m21 m22]
