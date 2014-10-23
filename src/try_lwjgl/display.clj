@@ -38,6 +38,7 @@
 
   (model.camera/point @models/player)
   (models/draw)
+  (model.camera/draw-crosshairs @models/player)
   (util/exit-on-gl-error "Error in draw"))
 
 (defn init []

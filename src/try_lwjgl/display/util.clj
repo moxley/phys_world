@@ -2,6 +2,12 @@
   (:import [org.lwjgl.opengl GL11 Display]
            [org.lwjgl.util.glu GLU]))
 
+(defmacro with-pushed-attrib [attrib & commands]
+  `(do
+     (GL11/glPushAttrib ~attrib)
+     ~@commands
+     (GL11/glPopAttrib)))
+
 (defmacro with-pushed-matrix [& commands]
   `(do
      (GL11/glPushMatrix)

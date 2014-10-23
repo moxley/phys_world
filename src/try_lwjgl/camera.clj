@@ -16,6 +16,50 @@
 (def zFar (float 100))
 (def camera (atom nil))
 
+(defn draw-crosshairs [player]
+  (let [phys-player (:phys player)
+        pos (physics/get-position phys-player)
+        [px py pz]       pos
+        orientation (deref (:orientation player))
+        [pitch yaw roll] orientation
+        len 0.05]
+
+    (GL11/glMatrixMode GL11/GL_PROJECTION)
+    (util/with-pushed-matrix
+      (GL11/glLoadIdentity)
+      (GL11/glOrtho (float -1)
+                    (float 1)
+                    (float (* -1 (/ 600 800)))
+                    (float (/ 600 800))
+                    (float -1)
+                    (float 1))
+
+      (GL11/glMatrixMode GL11/GL_MODELVIEW)
+      (util/with-pushed-matrix
+        (GL11/glLoadIdentity)
+
+        (util/with-pushed-attrib GL11/GL_DEPTH_TEST
+          (GL11/glDisable GL11/GL_DEPTH_TEST)
+
+          (util/with-pushed-attrib GL11/GL_DEPTH_WRITEMASK
+            (GL11/glDepthMask false)
+
+            (shader/with-program
+              ;; x-axis (red)
+              (GL11/glColor3f 1.0 0.0 0.0)
+              (util/do-shape GL11/GL_LINES
+                             (GL11/glVertex3f (* -1 len) 0 0)
+                             (GL11/glVertex3f len 0 0))
+
+              ;; y-axis (green)
+              (GL11/glColor3f 0.0 1.0 0.0)
+              (util/do-shape GL11/GL_LINES
+                             (GL11/glVertex3f 0 (* -1 len) 0)
+                             (GL11/glVertex3f 0 len 0)))))
+
+        (GL11/glMatrixMode GL11/GL_PROJECTION))
+      (GL11/glMatrixMode GL11/GL_MODELVIEW))))
+
 (defn apply-optimal-states []
   (when (.GL_ARB_depth_clamp (GLContext/getCapabilities))
     (GL11/glEnable ARBDepthClamp/GL_DEPTH_CLAMP)))
