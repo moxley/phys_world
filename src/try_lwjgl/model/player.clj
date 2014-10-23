@@ -24,7 +24,7 @@
     (.addRigidBody world phys-player)
     specs))
 
-(defn unit-movement [right? left? backward? forward? down? up?]
+(defn unit-movement [right? left? down? up? backward? forward?]
   "Movement vector from origin position, origin rotation"
   (let [x (+ (if right? -1 0) (if left? 1 0))
         y (+ (if down? -1 0) (if up? 1 0))
@@ -48,7 +48,7 @@
         right? (input/key-down? :d)
         up? (input/key-down? :space)
         down? (input/key-down? :lshift)
-        m-unit-vector (unit-movement right? left? backward? forward? down? up?)
+        m-unit-vector (unit-movement right? left? down? up? backward? forward?)
         orientation (map (fn [d] (Math/toRadians d)) (deref (:orientation player)))
         [pitch yaw roll] orientation
         [mx my mz] (rotate-vector m-unit-vector yaw)
@@ -82,7 +82,36 @@
         (GL11/glColor4f 1 0 0 1)
         (.draw sphere player-radius 30 30)))))
 
+(defn draw-crosshairs [player]
+  (let [phys-player (:phys player)
+        pos (physics/get-position phys-player)
+        [px py pz]       pos
+        orientation (deref (:orientation player))
+        [pitch yaw roll] orientation
+        len 0.1]
+    (util/with-pushed-matrix
+      (shader/with-program
+        (GL11/glTranslatef px py pz)
+        (GL11/glRotatef (* -1.0 yaw) 0 1 0)
+        (GL11/glRotatef pitch 1 0 0)
+        (GL11/glTranslatef 0 0 2)
+
+        ;; x-axis (red)
+        (GL11/glColor3f 1.0 0.0 0.0)
+        (util/do-shape GL11/GL_LINES
+                       (GL11/glVertex3f (* -1 len) 0 0)
+                       (GL11/glVertex3f len 0 0))
+
+        ;; y-axis (green)
+        (GL11/glColor3f 0.0 1.0 0.0)
+        (util/do-shape GL11/GL_LINES
+                       (GL11/glVertex3f 0 (* -1 len) 0)
+                       (GL11/glVertex3f 0 len 0))
+
+        ))))
+
 (defn draw [player]
   (let [phys-player (:phys player)
         pos (physics/get-position phys-player)]
-    (when false (draw-sphere pos))))
+    (when false (draw-sphere pos))
+    (draw-crosshairs player)))
