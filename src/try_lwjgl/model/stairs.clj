@@ -4,7 +4,7 @@
             [try-lwjgl.physics :as physics]
             [try-lwjgl.model.wood-block :as wood-block]))
 
-(defn create-one [world position]
+(defn create [world position]
   (let [width 1
         phys (physics/build-box width position)
         specs {:width width
@@ -14,11 +14,11 @@
     (.addRigidBody world phys)
     specs))
 
-(defn create [world]
+(defn create-many [world]
   (let [width 4
         height 3
         progression (for [y (range height) x (range width)] [x y])]
-    (map (fn [i] (let [[side up] i] (create-one world [side up (* -1.0 up)])))
+    (map (fn [i] (let [[side up] i] (create world [side up (* -1.0 up)])))
          progression)))
 
 (defn draw [stairs]

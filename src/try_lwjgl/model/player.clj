@@ -34,12 +34,28 @@
             [(.x v) (.y v) (.z v)])]
     v))
 
-(defn rotate-vector [v angle]
-  (let [[x0 y0 z0] v
+(defn rotate-vector [p angle]
+  (let [[x0 y0 z0] p
         x (- (* x0 (Math/cos angle)) (* z0 (Math/sin angle)))
         y y0
         z (+ (* x0 (Math/sin angle)) (* z0 (Math/cos angle)))]
     [x y z]))
+
+(defn forward-position
+  ([player] (forward-position (physics/get-position (:phys player))
+                               @(:orientation player)))
+  ([pos orientation]
+     (let [[px py pz] pos
+           [pitch yaw roll] (map (fn [a] (Math/toRadians a)) orientation)
+           ny (Math/sin pitch)
+           nx (* -1 (Math/sin yaw) (Math/cos pitch))
+           nz (* (Math/cos yaw) (Math/cos pitch))
+           npos0 (math/scale [nx ny nz] 2.0)
+           [mx my mz] npos0
+           x (+ px mx)
+           y (+ py my)
+           z (+ pz mz)]
+       [x y z])))
 
 (defn movement [delta player]
   (let [forward?    (input/key-down? :w)
@@ -68,10 +84,6 @@
         new-yaw (+ yaw dx)
         new-orientation [new-pitch new-yaw roll]]
     (swap! (:orientation player) (fn [_] new-orientation))))
-
-(defn logic [delta player]
-  (movement delta player)
-  (orientation delta player))
 
 (defn draw-sphere [pos]
   (let [sphere (Sphere.)]

@@ -2,8 +2,7 @@
   (:import [org.lwjgl.input Mouse Keyboard]))
 
 (def key-map (atom nil))
-(def key-listeners (atom []))
-(def key-events (atom []))
+(def key-events (atom nil))
 (def mouse-grabbed? (atom false))
 
 ;;
@@ -59,12 +58,17 @@
                           repeat-event?))
 
   ([key-events keyboard-next? get-event-key key-state? repeat-event?]
-   (swap! key-events (fn [x] []))
-   (loop [has-event? (keyboard-next?)]
-     (when has-event?
-       (collect-current-event key-events (get-event-key) (key-state?) (repeat-event?))
-       (recur (keyboard-next?))))
-   @key-events))
+     (reset! key-events [])
+     (loop [has-event? (keyboard-next?)]
+       (when has-event?
+         (collect-current-event key-events (get-event-key) (key-state?) (repeat-event?))
+         (recur (keyboard-next?))))
+     ;;   (println "key-events 1:" key-events)
+     @key-events))
+
+(defn get-key-events []
+  (let [events (or @key-events (collect-key-events))]
+    events))
 
 ;;
 ;; Mouse
@@ -90,6 +94,9 @@
   (or (Mouse/isButtonDown 2)
       (and (Mouse/isButtonDown 0)
            (key-down? :lcontrol))))
+
+(defn iterate [delta]
+  (swap! key-events (fn [x] nil)))
 
 ;;
 ;; Initialize

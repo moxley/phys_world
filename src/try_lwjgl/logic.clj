@@ -1,5 +1,9 @@
 (ns try-lwjgl.logic
-  (:require [try-lwjgl.input :as input]))
+  (:require [try-lwjgl.input :as input]
+            [try-lwjgl.model.player :as model.player]
+            [try-lwjgl.models :as models]
+            [try-lwjgl.math :as math]
+            [try-lwjgl.physics :as physics]))
 
 (def angle (atom 0.1))
 (def angle-speed (atom 0.5))
@@ -138,12 +142,39 @@
           (keys key-listeners)))
 
 (defn handle-keyboard []
-  (let [events (input/collect-key-events)
+  (let [events (input/get-key-events)
         events-by-key (events-by-key events)]
 
     (doseq [[key listener] key-listeners]
       (let [event (events-by-key key)]
         (listener key event)))))
+
+(defn touch [player]
+  (let [key-events (input/get-key-events)]
+    (when (some (fn [e] (and (:down? e)
+                            (= :f (:key e))
+                            (not (:repeat? e))))
+                key-events)
+      (let [ppos (physics/get-position (:phys player))
+            pos (model.player/forward-position player)]
+          (models/add-stair pos)))))
+
+(defn player-logic [delta player]
+  (model.player/movement delta player)
+  (model.player/orientation delta player)
+  (touch player))
+
+(defn handle-input [delta]
+  (input/iterate delta)
+  (doseq [event (input/get-key-events)]
+    (let [[key down? repeat?] (map #(event %) [:key :down? :repeat?])]
+      (cond
+       (= :g key) (input/set-mouse-grabbed true)
+       (= :r key) (input/set-mouse-grabbed false)))))
+
+(defn frame [delta]
+  (handle-input delta)
+  (player-logic delta @models/player))
 
 (defn init []
   (input/init)

@@ -49,6 +49,7 @@
          _ (set! (.restitution construction-info) restitution)
          _ (set! (.angularDamping construction-info) 0.95)
          body (RigidBody. construction-info)
+         _ (.setLinearVelocity body (math/jvec3f 0 0 0))
          _ (.setActivationState body CollisionObject/DISABLE_DEACTIVATION)]
      body)))
 

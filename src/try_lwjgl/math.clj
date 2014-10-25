@@ -91,8 +91,9 @@
     (.scale jv (float m))
     (jvtov jv)))
 
-(defn add [v distance]
-  (let [jv (apply jvec3f v)
+(defn add [pos distance]
+  "Translate point v by vector distance"
+  (let [jpos (apply jvec3f pos)
         jdistance (apply jvec3f distance)]
-    (.add jv jdistance)
-    (jvtov jv)))
+    (.add jpos jdistance)
+    (jvtov jpos)))
