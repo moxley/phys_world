@@ -3,6 +3,7 @@
 
 (def key-map (atom nil))
 (def key-events (atom nil))
+(def mouse-events (atom nil))
 (def mouse-grabbed? (atom false))
 
 ;;
@@ -74,6 +75,23 @@
 ;; Mouse
 ;;
 
+(defn mouse-next? [] (Mouse/next))
+(defn mouse-event-button [] (Mouse/getEventButton))
+(defn mouse-event-button-state [] (Mouse/getEventButtonState))
+
+(defn collect-mouse-events []
+  (loop [has-event? (mouse-next?)
+         events []]
+    (if-not has-event?
+      events
+      (let [btn (mouse-event-button)
+            down? (mouse-event-button-state)]
+        (recur (mouse-next?)
+               (conj events {:button btn :down? down?}))))))
+
+(defn get-mouse-events []
+  (or @mouse-events (reset! mouse-events (collect-mouse-events))))
+
 (defn set-mouse-grabbed [grabbed?]
   (when (or (and (not grabbed?) @mouse-grabbed?)
             (and grabbed? (not @mouse-grabbed?)))
@@ -86,6 +104,8 @@
 (defn mouse-dy []
   (Mouse/getDY))
 
+(defn mouse-left-click? [])
+
 (defn mouse-left-down? []
   (and (Mouse/isButtonDown 0)
        (not (key-down? :lcontrol))))
@@ -96,7 +116,8 @@
            (key-down? :lcontrol))))
 
 (defn iterate [delta]
-  (swap! key-events (fn [x] nil)))
+  (reset! key-events nil)
+  (reset! mouse-events nil))
 
 ;;
 ;; Initialize

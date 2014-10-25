@@ -149,20 +149,18 @@
       (let [event (events-by-key key)]
         (listener key event)))))
 
-(defn touch [player]
-  (let [key-events (input/get-key-events)]
-    (when (some (fn [e] (and (:down? e)
-                            (= :f (:key e))
-                            (not (:repeat? e))))
-                key-events)
+(defn actions [player]
+  (let [events (input/get-mouse-events)
+        mouse-left? (first (filter #(and (= (:button %) 0) (:down? %)) events))]
+    (when mouse-left?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
-          (models/add-stair pos)))))
+        (models/add-stair pos)))))
 
 (defn player-logic [delta player]
   (model.player/movement delta player)
   (model.player/orientation delta player)
-  (touch player))
+  (actions player))
 
 (defn handle-input [delta]
   (input/iterate delta)

@@ -33,12 +33,11 @@
     (RigidBody. groundBodyConstructionInfo)))
 
 (defn build-body
-  ([shape position] (build-body shape position 0.1 0.0))
+  ([shape position] (build-body shape position 0.05 0.5))
   ([shape position restitution linear-damping]
    (let [p (vec (map #(float %) position))
          default-transform (Transform. (Matrix4f. (Quat4f. 0 0 0 1)
-                                                  ;; Starting
-                                                  ;; position
+                                                  ;; Starting position
                                                   (apply math/jvec3f p)
                                                   (float 1)))
          motion-state (DefaultMotionState. default-transform)
