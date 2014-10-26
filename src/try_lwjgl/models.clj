@@ -30,6 +30,30 @@
   (let [stair (model.stairs/create @world pos)]
     (swap! stairs #(conj % stair))))
 
+(defn stair-finder [pos stair]
+  (let [[x y z] pos
+        phys (:phys stair)
+        spos (physics/get-position phys)
+        [sx sy sz] spos
+        width (:width stair)
+        half (/ width 2.0)]
+    (and (>= x (- sx half))
+         (< x (+ sx half))
+         (>= y (- sy half))
+         (< y (+ sy half))
+         (>= z (- sz half))
+         (< z (+ sz half)))))
+
+(defn find-stair [pos]
+  (first (filter (fn [stair] (stair-finder pos stair)) @stairs)))
+
+(defn remove-stair [pos]
+  (when-let [stair (find-stair pos)]
+    (println "Found stair")
+    (.removeRigidBody @world (:phys stair))
+    (swap! stairs #(filter (fn [s] (not (= s stair))) %))
+    @stairs))
+
 (defn init []
   (swap! world  (fn [_] (physics/build-world)))
   (swap! ground (fn [_] (model.ground/create @world [0 -10 0])))

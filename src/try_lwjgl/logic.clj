@@ -151,8 +151,13 @@
 
 (defn actions [player]
   (let [events (input/get-mouse-events)
-        mouse-left? (first (filter #(and (= (:button %) 0) (:down? %)) events))]
+        mouse-left? (first (filter #(and (= (:button %) 0) (:down? %) (not (input/key-down? :lcontrol))) events))
+        mouse-right? (first (filter #(and (= (:button %) 0) (:down? %) (input/key-down? :lcontrol)) events))]
     (when mouse-left?
+      (let [ppos (physics/get-position (:phys player))
+            pos (model.player/forward-position player)]
+        (models/remove-stair pos)))
+    (when mouse-right?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
         (models/add-stair pos)))))
