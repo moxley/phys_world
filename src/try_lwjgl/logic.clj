@@ -3,7 +3,8 @@
             [try-lwjgl.model.player :as model.player]
             [try-lwjgl.models :as models]
             [try-lwjgl.math :as math]
-            [try-lwjgl.physics :as physics]))
+            [try-lwjgl.physics :as physics]
+            [try-lwjgl.model.highlight :as highlight]))
 
 (def angle (atom 0.1))
 (def angle-speed (atom 0.5))
@@ -160,17 +161,26 @@
     (when mouse-right?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
-        (models/add-stair pos)))
-    (when (input/key-down-event :1)
-      (models/add-stair [0.5 0.5 0.5]))))
+        (models/add-stair pos)))))
+
+(defn highlight-pointed-face
+  ([player]
+     (let [player-pos (physics/get-position (:phys player))
+           pointer-pos (model.player/forward-position player)]
+       (highlight-pointed-face player-pos pointer-pos)))
+  ([player-pos pointer-pos]
+     (let [p1 player-pos
+           p2 pointer-pos])))
 
 (defn player-logic [delta player]
   (model.player/movement delta player)
   (model.player/orientation delta player)
+  ;;(highlight-pointed-face player)
   (actions player))
 
 (defn handle-input [delta]
   (input/iterate delta)
+  ;; TODO Use input/key-down-event instead
   (doseq [event (input/get-key-events)]
     (let [[key down? repeat?] (map #(event %) [:key :down? :repeat?])]
       (cond

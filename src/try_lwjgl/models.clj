@@ -6,7 +6,8 @@
             [try-lwjgl.model.ground :as model.ground]
             [try-lwjgl.model.stairs :as model.stairs]
             [try-lwjgl.model.ball :as model.ball]
-            [try-lwjgl.model.player :as model.player]))
+            [try-lwjgl.model.player :as model.player]
+            [try-lwjgl.model.highlight :as highlight]))
 
 (def world (atom nil))
 (def ball (atom nil))
@@ -24,7 +25,8 @@
   (model.ground/draw @ground)
   (model.stairs/draw @stairs)
   (model.ball/draw @ball)
-  (model.player/draw @player))
+  (model.player/draw @player)
+  (highlight/highlight-face @player))
 
 (defn add-stair [pos]
   (let [stair (model.stairs/create @world pos)]

@@ -65,14 +65,14 @@
          (recur (keyboard-next?))))
      @key-events))
 
+(defn get-key-events []
+  (let [events (or @key-events (collect-key-events))]
+    events))
+
 (defn key-down-event [key]
   (first (filter #(and (= key (:key %))
                        (:down? %))
                  (get-key-events))))
-
-(defn get-key-events []
-  (let [events (or @key-events (collect-key-events))]
-    events))
 
 ;;
 ;; Mouse
