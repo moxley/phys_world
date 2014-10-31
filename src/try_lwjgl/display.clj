@@ -42,5 +42,4 @@
   (util/exit-on-gl-error "Error in draw"))
 
 (defn init []
-  (setup-opengl WIDTH HEIGHT "alpha")
-  (models/init))
+  (setup-opengl WIDTH HEIGHT "alpha"))

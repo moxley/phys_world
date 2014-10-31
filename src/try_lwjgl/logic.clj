@@ -179,7 +179,7 @@
   (actions player))
 
 (defn handle-input [delta]
-  (input/iterate delta)
+  (input/iteration delta)
   ;; TODO Use input/key-down-event instead
   (doseq [event (input/get-key-events)]
     (let [[key down? repeat?] (map #(event %) [:key :down? :repeat?])]

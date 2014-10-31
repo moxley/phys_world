@@ -118,7 +118,7 @@
       (and (Mouse/isButtonDown 0)
            (key-down? :lcontrol))))
 
-(defn iterate [delta]
+(defn iteration [delta]
   (reset! key-events nil)
   (reset! mouse-events nil))
 
