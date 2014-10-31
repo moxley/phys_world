@@ -57,15 +57,18 @@
                           get-event-key
                           key-state?
                           repeat-event?))
-
   ([key-events keyboard-next? get-event-key key-state? repeat-event?]
      (reset! key-events [])
      (loop [has-event? (keyboard-next?)]
        (when has-event?
          (collect-current-event key-events (get-event-key) (key-state?) (repeat-event?))
          (recur (keyboard-next?))))
-     ;;   (println "key-events 1:" key-events)
      @key-events))
+
+(defn key-down-event [key]
+  (first (filter #(and (= key (:key %))
+                       (:down? %))
+                 (get-key-events))))
 
 (defn get-key-events []
   (let [events (or @key-events (collect-key-events))]

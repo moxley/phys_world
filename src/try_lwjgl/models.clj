@@ -55,8 +55,8 @@
     @stairs))
 
 (defn init []
-  (swap! world  (fn [_] (physics/build-world)))
-  (swap! ground (fn [_] (model.ground/create @world [0 -10 0])))
-  (swap! ball   (fn [_] (model.ball/create @world 1.0 [0 5 0])))
-  (swap! player (fn [_] (model.player/create @world [-2 0 10])))
-  (swap! stairs (fn [_] (model.stairs/create-many @world))))
+  (reset! world  (physics/build-world))
+  (reset! ground (model.ground/create @world [0 0 0]))
+  (reset! ball   (model.ball/create @world 1.0 [0 5 0]))
+  (reset! player (model.player/create @world [-2 0 10]))
+  (reset! stairs []))

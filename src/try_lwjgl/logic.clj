@@ -160,7 +160,9 @@
     (when mouse-right?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
-        (models/add-stair pos)))))
+        (models/add-stair pos)))
+    (when (input/key-down-event :1)
+      (models/add-stair [0.5 0.5 0.5]))))
 
 (defn player-logic [delta player]
   (model.player/movement delta player)

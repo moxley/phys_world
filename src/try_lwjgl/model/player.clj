@@ -47,7 +47,7 @@
   ([pos orientation]
      (let [[px py pz] pos
            [pitch yaw roll] (map (fn [a] (Math/toRadians a)) orientation)
-           ny (Math/sin pitch)
+           ny (* -1 (Math/sin pitch))
            nx (* -1 (Math/sin yaw) (Math/cos pitch))
            nz (* (Math/cos yaw) (Math/cos pitch))
            npos0 (math/scale [nx ny nz] 2.0)

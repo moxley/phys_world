@@ -75,4 +75,5 @@
                                                  (float 1)))]
     (.setCenterOfMassTransform body default-transform)
     (.setAngularVelocity body (math/jvec3f 0 0 0))
-    (.setLinearVelocity body (math/jvec3f 0 0 0))))
+    (.setLinearVelocity body (math/jvec3f 0 0 0))
+    (.activate body)))
