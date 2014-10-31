@@ -4,7 +4,7 @@
             [try-lwjgl.model.grid :as grid]
             [try-lwjgl.model.container-cube :as container-cube]
             [try-lwjgl.model.ground :as model.ground]
-            [try-lwjgl.model.stairs :as model.stairs]
+            [try-lwjgl.model.block :as model.block]
             [try-lwjgl.model.ball :as model.ball]
             [try-lwjgl.model.player :as model.player]
             [try-lwjgl.model.highlight :as highlight]))
@@ -23,13 +23,13 @@
   ;(grid/draw)
   (container-cube/draw)
   (model.ground/draw @ground)
-  (model.stairs/draw @blocks)
+  (model.block/draw-many @blocks)
   (model.ball/draw @ball)
   (model.player/draw @player)
   (highlight/highlight-face @player))
 
-(defn add-stair [pos]
-  (let [block (model.stairs/create @world pos)]
+(defn add-block [pos]
+  (let [block (model.block/create @world pos)]
     (swap! blocks #(conj % block))))
 
 (defn block-finder [pos block]
@@ -49,7 +49,7 @@
 (defn find-block [pos]
   (first (filter (fn [block] (block-finder pos block)) @blocks)))
 
-(defn remove-stair [pos]
+(defn remove-block [pos]
   (when-let [block (find-block pos)]
     (println "Found block")
     (.removeRigidBody @world (:phys block))

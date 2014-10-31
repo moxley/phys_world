@@ -1,4 +1,4 @@
-(ns try-lwjgl.model.stairs
+(ns try-lwjgl.model.block
   (:import [org.lwjgl.opengl GL11])
   (:require [try-lwjgl.display.util :as util]
             [try-lwjgl.physics :as physics]
@@ -21,10 +21,10 @@
     (map (fn [i] (let [[side up] i] (create world [side up (* -1.0 up)])))
          progression)))
 
-(defn draw [stairs]
-  (doseq [stair stairs]
-    (let [phys (:phys stair)
-          width (:width stair)
+(defn draw-many [blocks]
+  (doseq [block blocks]
+    (let [phys (:phys block)
+          width (:width block)
           offset (/ width 2.0)
           pos (physics/get-position phys)
           [x y z] pos]

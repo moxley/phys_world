@@ -157,11 +157,11 @@
     (when mouse-left?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
-        (models/remove-stair pos)))
+        (models/remove-block pos)))
     (when mouse-right?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
-        (models/add-stair pos)))))
+        (models/add-block pos)))))
 
 (defn highlight-pointed-face
   ([player]
