@@ -9,8 +9,8 @@
             [try-lwjgl.model.player :as model.player]
             [try-lwjgl.model.highlight :as highlight]))
 
-(def world (atom nil))
-(def ball (atom nil))
+(def world  (atom nil))
+(def ball   (atom nil))
 (def ground (atom nil))
 (def player (atom nil))
 (def blocks (atom nil))
@@ -51,7 +51,6 @@
 
 (defn remove-block [pos]
   (when-let [block (find-block pos)]
-    (println "Found block")
     (.removeRigidBody @world (:phys block))
     (swap! blocks #(filter (fn [s] (not (= s block))) %))
     @blocks))

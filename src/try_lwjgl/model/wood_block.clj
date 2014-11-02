@@ -5,35 +5,39 @@
             [try-lwjgl.model.textured-panel :as textured-panel]))
 
 (defn draw-block [draw-panel]
-    ;; face
-  (draw-panel)
+
+  ;; +z face
+  (util/with-pushed-matrix
+   (GL11/glTranslatef 0 0 1)
+   (draw-panel))
 
   ;; back
   (util/with-pushed-matrix
-   (GL11/glTranslatef 0 0 -1)
    (draw-panel))
 
-  ;; ;; left
-  (util/with-pushed-matrix
-   (GL11/glRotatef 90 0 1 0)
-   (draw-panel))
-
-  ;; right
+  ;; +x side
   (util/with-pushed-matrix
    (GL11/glTranslatef 1 0 0)
-   (GL11/glRotatef 90 0 1 0)
+   (GL11/glRotatef -90 0 1 0)
    (draw-panel))
 
-  ;; back
+  ;; -x side
   (util/with-pushed-matrix
-   (GL11/glRotatef -90 1 0 0)
+   (GL11/glRotatef -90 0 1 0)
+   (GL11/glTranslatef 0 0 0)
    (draw-panel))
 
-  ;; ;; top
+  ;; bottom
+  (util/with-pushed-matrix
+   (GL11/glRotatef 90 1 0 0)
+   (draw-panel))
+
+  ;; top
   (util/with-pushed-matrix
    (GL11/glTranslatef 0 1 0)
-   (GL11/glRotatef -90 1 0 0)
-   (draw-panel)))
+   (GL11/glRotatef 90 1 0 0)
+   (draw-panel))
+  )
 
 (defn draw []
   (draw-block textured-panel/draw))

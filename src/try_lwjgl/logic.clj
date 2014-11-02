@@ -161,7 +161,9 @@
     (when mouse-right?
       (let [ppos (physics/get-position (:phys player))
             pos (model.player/forward-position player)]
-        (models/add-block pos)))))
+        (models/add-block pos)))
+    (when (input/key-down-event :1)
+      (models/add-block [0.5 0.5 0.5]))))
 
 (defn highlight-pointed-face
   ([player]
