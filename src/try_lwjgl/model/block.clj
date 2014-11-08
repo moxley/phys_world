@@ -202,24 +202,14 @@
      (let [[x y z] graph-pos]
        (shader/with-program
          (util/with-pushed-matrix
-           (GL11/glTranslatef 0 0 0)
            (GL11/glTranslatef x y z)
 
            ;; White
            (GL11/glColor3f 0.8 0.8 0.8)
-           (util/do-shape GL11/GL_LINES
-                          ;; bottom +x
-                          (GL11/glVertex3f 0 0 0)
-                          (GL11/glVertex3f 1 0 0)
-                          ;; up +y
-                          (GL11/glVertex3f 1 0 0)
-                          (GL11/glVertex3f 1 1 0)
-                          ;; top -x
-                          (GL11/glVertex3f 1 1 0)
-                          (GL11/glVertex3f 0 1 0)
-                          ;; down -y
-                          (GL11/glVertex3f 0 1 0)
-                          (GL11/glVertex3f 0 0 0)))))))
+           (util/do-shape
+            GL11/GL_LINES
+            (doseq [[x y z] (util/rect-vertices [0 0 0] [1 1 0])]
+              (GL11/glVertex3f x y z))))))))
 
 (defn draw [block]
   (let [graph-pos (graph-position block)
