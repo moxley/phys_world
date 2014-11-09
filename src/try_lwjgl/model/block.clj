@@ -64,9 +64,12 @@
      nil
 
      (and slope1 slope2)
-     (let [x (/ (- off2 off1) (- slope1 slope2))
-           y (+ (* x slope1) off1)]
-       [x y])
+     (let [slope-diff (- slope1 slope2)]
+       (if (= slope-diff 0)
+         (let [x (/ (- off2 off1) slope-diff)
+               y (+ (* x slope1) off1)]
+           [x y]))
+       nil)
 
      (not slope1)
      (let [x ((seg1 0) 0)
@@ -105,7 +108,7 @@
   (let [intersect (line-intersect seg1 seg2)]
     (constrain-intersect intersect seg1 seg2)))
 
-(defn arm-face-intersect [arm face]
+(defn arm-face-intersect [arm face-abs]
   ;; facing down, towards y-axis
   ;; Get x-z coords from face points
   (let [[a1 a2] arm
@@ -115,7 +118,7 @@
         arm1-xy [(a1 0) (a1 1)]
         arm2-xy [(a2 0) (a2 1)]
         arm-xy-line [arm1-xy arm2-xy]
-        [f1 f2] face
+        [f1 f2] face-abs
         face1-xz [(f1 0) (f1 2)]
         face2-xz [(f2 0) (f2 2)]
         face-xz-line [face1-xz face2-xz]
@@ -128,11 +131,14 @@
          i-xy
          [(i-xz 0) (i-xy 1) (i-xz 1)])))
 
-(let [arm [[0.5 0.5 0.5] [0.5 0.5 -0.5]]
-      face [[0.0 0.0 0.0] [1.0 1.0 0.0]]]
-  (arm-face-intersect arm face))
+(def HALF_WIDTH (float 0.5))
+(def HALF_WIDTH_VECTOR [HALF_WIDTH HALF_WIDTH HALF_WIDTH])
 
-(defn faces [pos half-width]
+(defn face-abs [block-pos face-rel]
+  (map #(math/add (math/sub block-pos HALF_WIDTH_VECTOR) %)
+       face-rel))
+
+(defn faces-old [pos half-width]
   "Location of faces for a given block"
   (let [[x y z] pos
         hw half-width]
@@ -172,11 +178,24 @@
         min-dist (min dist-a dist-b)]
     (if (= min-dist dist-a) a b)))
 
-(defn closest-intersecting-face [pos half-width arm]
+(def FACES
+  "Description of block faces, relative to origin (0 0 0)"
+  [[[0.0 0.0 0.0] [1.0 1.0 0.0]]
+   [[0.0 0.0 0.0] [1.0 0.0 1.0]]
+   [[0.0 0.0 0.0] [0.0 1.0 1.0]]
+   [[0.0 0.0 1.0] [1.0 1.0 1.0]]
+   [[0.0 1.0 0.0] [1.0 1.0 1.0]]
+   [[1.0 0.0 0.0] [1.0 1.0 1.0]]])
+
+(defn arm-block-intersects [arm block-pos faces-col]
+  (map #(arm-face-intersect arm (face-abs block-pos %))
+       faces-col))
+
+(defn closest-intersecting-face [pos arm]
   (let [[p1 p2] arm
-        faces-intersects (map (fn [face] {:face face
-                                         :intersect (arm-face-intersect [p1 p2] face)})
-                              (faces pos half-width))
+        intersects (arm-block-intersects arm pos FACES)
+        faces-intersects (map #(let [[face intersect] %] {:face face :intersect intersect})
+                              (partition 2 (interleave FACES intersects)))
         matching-faces-intersects (filter :intersect faces-intersects)
         closer (fn [fia fib] (let [a (:intersect fia)
                                   b (:intersect fib)
@@ -185,10 +204,6 @@
         closest-fi (reduce closer matching-faces-intersects)]
     (:face closest-fi)))
 
-;; (closest-intersecting-face [0.5 0.5 0.5]
-;;                            0.5
-;;                            [[0.5 0.5 1.5] [0.5 0.5 -0.5]])
-
 (defn graph-position [block]
   (let [pos (position block)
         [x y z] pos
@@ -196,20 +211,18 @@
         offset (/ width 2.0)]
     [(- x offset) (- y offset) (- z offset)]))
 
-(defn draw-face
-  ([block face] (draw-face (graph-position block) nil nil))
-  ([graph-pos translate rotations]
-     (let [[x y z] graph-pos]
-       (shader/with-program
-         (util/with-pushed-matrix
-           (GL11/glTranslatef x y z)
+(defn draw-face [block-pos face]
+  (let [[x y z] (math/sub block-pos HALF_WIDTH_VECTOR)]
+    (shader/with-program
+      (util/with-pushed-matrix
+        (GL11/glTranslatef x y z)
 
-           ;; White
-           (GL11/glColor3f 0.8 0.8 0.8)
-           (util/do-shape
-            GL11/GL_LINES
-            (doseq [[x y z] (util/rect-vertices [0 0 0] [1 1 0])]
-              (GL11/glVertex3f x y z))))))))
+        ;; White
+        (GL11/glColor3f 0.8 0.8 0.8)
+        (util/do-shape
+         GL11/GL_LINES
+         (doseq [[x y z] (apply util/rect-vertices face)]
+           (GL11/glVertex3f x y z)))))))
 
 (defn draw [block]
   (let [graph-pos (graph-position block)
@@ -217,7 +230,7 @@
     (util/with-pushed-matrix
       (GL11/glTranslatef x y z)
       (wood-block/draw))
-    (draw-face block [[0 0 0] [1 1 0]])))
+    (draw-face (position block) [[0 0 0] [1 1 0]])))
 
 (defn draw-many [blocks]
   (doseq [block blocks]

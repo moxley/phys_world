@@ -57,6 +57,12 @@
            z (+ pz mz)]
        [x y z])))
 
+(defn position [player]
+  (physics/get-position (:phys player)))
+
+(defn arm [player]
+  [(position player) (forward-position player)])
+
 (defn movement [delta player]
   (let [forward?    (input/key-down? :w)
         backward?  (input/key-down? :s)

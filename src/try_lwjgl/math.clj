@@ -97,3 +97,16 @@
         jdistance (apply jvec3f distance)]
     (.add jpos jdistance)
     (jvtov jpos)))
+
+(defn sub [pos distance]
+  "Translate point v by negative vector distance"
+  (let [jpos (apply jvec3f pos)
+        jdistance (apply jvec3f distance)]
+    (.sub jpos jdistance)
+    (jvtov jpos)))
+
+(defn scale [pos distance]
+  "Multiply point v by scalar distance"
+  (let [jpos (apply jvec3f pos)]
+    (.scale jpos distance)
+    (jvtov jpos)))
