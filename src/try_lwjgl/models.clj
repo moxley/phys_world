@@ -14,6 +14,7 @@
 (def ground (atom nil))
 (def player (atom nil))
 (def blocks (atom nil))
+(def highlight-face (atom nil))
 
 (defn simulate [delta]
   (.stepSimulation @world (* delta 1000.0)))
@@ -23,10 +24,11 @@
   ;(grid/draw)
   (container-cube/draw)
   (model.ground/draw @ground)
-  (model.block/draw-many @blocks)
+  (model.block/draw-many @blocks @highlight-face)
   (model.ball/draw @ball)
   (model.player/draw @player)
-  (highlight/highlight-face @player))
+  ;;(highlight/highlight-face @player)
+  )
 
 (defn add-block [pos]
   (let [block (model.block/create @world pos)]

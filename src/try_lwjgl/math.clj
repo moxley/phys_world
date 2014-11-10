@@ -110,3 +110,25 @@
   (let [jpos (apply jvec3f pos)]
     (.scale jpos distance)
     (jvtov jpos)))
+
+(defn pythagorean-dist [a b]
+  (Math/sqrt (+ a b)))
+
+(defn distance-2d [p1 p2]
+  (let [[p1x p1y] p1
+        [p2x p2y] p2]
+    (pythagorean-dist (Math/abs (float (- p2x p1x)))
+                      (Math/abs (float (- p2y p1y))))))
+
+(defn distance-3d [p1 p2]
+  (let [[p1x p1y p1z] p1
+        [p2x p2y p2z] p2
+        xy-dist (distance-2d [p1x p1y] [p2x p2y])
+        xz-dist (distance-2d [p1x p1z] [p2x p2z])]
+    (pythagorean-dist xy-dist xz-dist)))
+
+(defn closer-point-3d [point a b]
+  (let [dist-a (distance-3d point a)
+        dist-b (distance-3d point b)
+        min-dist (min dist-a dist-b)]
+    (if (= min-dist dist-a) a b)))

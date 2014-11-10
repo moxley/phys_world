@@ -156,28 +156,6 @@
        ;; side +x
        [[(+ x hw) (- y hw) (- z hw)] [(+ x hw) (+ y hw) (+ z hw)]]]))
 
-(defn pythagorean-dist [a b]
-  (Math/sqrt (+ a b)))
-
-(defn distance-2d [p1 p2]
-  (let [[p1x p1y] p1
-        [p2x p2y] p2]
-    (pythagorean-dist (Math/abs (float (- p2x p1x)))
-                      (Math/abs (float (- p2y p1y))))))
-
-(defn distance-3d [p1 p2]
-  (let [[p1x p1y p1z] p1
-        [p2x p2y p2z] p2
-        xy-dist (distance-2d [p1x p1y] [p2x p2y])
-        xz-dist (distance-2d [p1x p1z] [p2x p2z])]
-    (pythagorean-dist xy-dist xz-dist)))
-
-(defn closer-point-3d [point a b]
-  (let [dist-a (distance-3d point a)
-        dist-b (distance-3d point b)
-        min-dist (min dist-a dist-b)]
-    (if (= min-dist dist-a) a b)))
-
 (def FACES
   "Description of block faces, relative to origin (0 0 0)"
   [[[0.0 0.0 0.0] [1.0 1.0 0.0]]
@@ -191,18 +169,25 @@
   (map #(arm-face-intersect arm (face-abs block-pos %))
        faces-col))
 
-(defn closest-intersecting-face [pos arm]
+(defn closest-intersection [block-pos arm]
   (let [[p1 p2] arm
-        intersects (arm-block-intersects arm pos FACES)
-        faces-intersects (map #(let [[face intersect] %] {:face face :intersect intersect})
+        intersects (arm-block-intersects arm block-pos FACES)
+        faces-intersects (map #(let [[face intersect] %]
+                                 {:face face :intersect intersect})
                               (partition 2 (interleave FACES intersects)))
         matching-faces-intersects (filter :intersect faces-intersects)
-        closer (fn [fia fib] (let [a (:intersect fia)
-                                  b (:intersect fib)
-                                  cp (closer-point-3d p1 a b)]
-                              (if (= cp a) fia fib)))
-        closest-fi (reduce closer matching-faces-intersects)]
-    (:face closest-fi)))
+        closer (fn [fia fib] (cond
+                             (and fia fib)
+                             (let [a (:intersect fia)
+                                   b (:intersect fib)
+                                   cp (math/closer-point-3d p1 a b)]
+                               (if (= cp a) fia fib))
+
+                             fia fia
+                             fib fib
+                             :else nil))
+        closest-fi (reduce closer nil matching-faces-intersects)]
+    closest-fi))
 
 (defn graph-position [block]
   (let [pos (position block)
@@ -224,14 +209,16 @@
          (doseq [[x y z] (apply util/rect-vertices face)]
            (GL11/glVertex3f x y z)))))))
 
-(defn draw [block]
+(defn draw [block highlight-face]
   (let [graph-pos (graph-position block)
         [x y z] graph-pos]
     (util/with-pushed-matrix
       (GL11/glTranslatef x y z)
       (wood-block/draw))
-    (draw-face (position block) [[0 0 0] [1 1 0]])))
+    (when-let [f highlight-face]
+      ;; (draw-face (position block) [[0 0 0] [1 1 0]])
+      (draw-face (position block) (:face f)))))
 
-(defn draw-many [blocks]
+(defn draw-many [blocks highlight-face]
   (doseq [block blocks]
-    (draw block)))
+    (draw block highlight-face)))

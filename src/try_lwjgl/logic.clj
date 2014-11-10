@@ -2,6 +2,7 @@
   (:require [try-lwjgl.input :as input]
             [try-lwjgl.model.player :as model.player]
             [try-lwjgl.models :as models]
+            [try-lwjgl.model.block :as model.block]
             [try-lwjgl.math :as math]
             [try-lwjgl.physics :as physics]
             [try-lwjgl.model.highlight :as highlight]))
@@ -165,19 +166,33 @@
     (when (input/key-down-event :1)
       (models/add-block [0.5 0.5 0.5]))))
 
-(defn highlight-pointed-face
-  ([player]
-     (let [player-pos (physics/get-position (:phys player))
-           pointer-pos (model.player/forward-position player)]
-       (highlight-pointed-face player-pos pointer-pos)))
-  ([player-pos pointer-pos]
-     (let [p1 player-pos
-           p2 pointer-pos])))
+(defn closest-pointed-face [block-positions arm]
+  (let [intersections (map (fn [pos]
+                             (let [intersection (model.block/closest-intersection pos arm)]
+                               (assoc (or intersection {}) :block-position pos)))
+                           block-positions)
+        matching-intersections (filter :intersect intersections)
+        closer (fn [a b]
+                 (cond
+                  (and a b)
+                  (let [[ia ib] (map :intersect [a b])
+                        cp (math/closer-point-3d (arm 0) ia ib)]
+                    (if (= cp ia) a b))
+                  a a
+                  b b
+                  :else nil))
+        closest-intersection (reduce closer nil matching-intersections)]
+    closest-intersection))
+
+(defn set-highlight-face
+  ([blocks arm]
+     (reset! models/highlight-face
+               (closest-pointed-face (map model.block/position blocks) arm))))
 
 (defn player-logic [delta player]
   (model.player/movement delta player)
   (model.player/orientation delta player)
-  ;;(highlight-pointed-face player)
+  (set-highlight-face @models/blocks (model.player/arm player))
   (actions player))
 
 (defn handle-input [delta]

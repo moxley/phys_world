@@ -29,39 +29,46 @@
         intersects (model.block/arm-block-intersects arm block-pos model.block/FACES)]
     (is (= [nil [0.5 0.0 0.5] nil nil [0.5 1.0 0.5] nil] intersects))))
 
-(deftest closest-intersecting-face-test
+(deftest closest-intersection-test
   (let [block-pos [0.5 0.5 0.5]]
     ;; From the front +z
     (let [arm [[0.5 0.5 1.5] [0.5 0.5 -0.5]]]
-      (is (= [[0.0 0.0 1.0] [1.0 1.0 1.0]]
-             (model.block/closest-intersecting-face block-pos arm))))
+      (is (= {:face [[0.0 0.0 1.0] [1.0 1.0 1.0]]
+              :intersect [0.5 0.5 1.0]}
+             (model.block/closest-intersection block-pos arm))))
     ;; From the back -z
     (let [arm [[0.5 0.5 -0.5] [0.5 0.5 1.5]]]
-      (is (= [[0.0 0.0 0.0] [1.0 1.0 0.0]]
-             (model.block/closest-intersecting-face block-pos arm))))
+      (is (= {:face [[0.0 0.0 0.0] [1.0 1.0 0.0]]
+              :intersect [0.5 0.5 0.0]}
+             (model.block/closest-intersection block-pos arm))))
     ;; From the top +y
     (let [arm [[0.5 1.5 0.5] [0.5 -0.5 0.5]]]
-      (is (= [[0.0 1.0 0.0] [1.0 1.0 1.0]]
-             (model.block/closest-intersecting-face block-pos arm))))
+      (is (= {:face [[0.0 1.0 0.0] [1.0 1.0 1.0]]
+              :intersect [0.5 1.0 0.5]}
+             (model.block/closest-intersection block-pos arm))))
     ;; From the bottom -y
     (let [arm [[0.5 -0.5 0.5] [0.5 1.5 0.5]]]
-      (is (= [[0.0 0.0 0.0] [1.0 0.0 1.0]]
-             (model.block/closest-intersecting-face block-pos arm))))
+      (is (= {:face [[0.0 0.0 0.0] [1.0 0.0 1.0]]
+              :intersect [0.5 0.0 0.5]}
+             (model.block/closest-intersection block-pos arm))))
     ;; From the +x side
     (let [arm [[1.5 0.5 0.5] [-0.5 0.5 0.5]]]
-      (is (= [[1.0 0.0 0.0] [1.0 1.0 1.0]]
-             (model.block/closest-intersecting-face block-pos arm))))
+      (is (= {:face [[1.0 0.0 0.0] [1.0 1.0 1.0]]
+              :intersect [1.0 0.5 0.5]}
+             (model.block/closest-intersection block-pos arm))))
     ;; From the -x side
     (let [arm [[-0.5 0.5 0.5] [1.5 0.5 0.5]]]
-      (is (= [[0.0 0.0 0.0] [0.0 1.0 1.0]]
-             (model.block/closest-intersecting-face block-pos arm)))))
+      (is (= {:face [[0.0 0.0 0.0] [0.0 1.0 1.0]]
+              :intersect [0.0 0.5 0.5]}
+             (model.block/closest-intersection block-pos arm)))))
   ;; Translating the block-pos and arm by the same vector should have
   ;; no effect on the return value
   (let [block-pos [-0.5 -0.5 -0.5]
         arm [[-0.5 -0.5 0.5] [-0.5 -0.5 -1.5]]]
     ;; From the front +z
-    (is (= [[0.0 0.0 1.0] [1.0 1.0 1.0]]
-           (model.block/closest-intersecting-face block-pos arm)))))
+    (is (= {:face [[0.0 0.0 1.0] [1.0 1.0 1.0]]
+            :intersect [-0.5 -0.5 0.0]}
+           (model.block/closest-intersection block-pos arm)))))
 
 (deftest faces-intersects-test
   (let [block-pos [0.5 0.5 0.5]]))
