@@ -108,27 +108,30 @@
   (let [intersect (line-intersect seg1 seg2)]
     (constrain-intersect intersect seg1 seg2)))
 
+(defn arm-face-intersect-2d [arm face-abs d1 d2]
+  (let [[a1 a2] arm
+        arm1-p [(a1 d1) (a1 d2)]
+        arm2-p [(a2 d1) (a2 d2)]
+        arm-seg [arm1-p arm2-p]
+        [f1 f2] face-abs
+        face1-p [(f1 d1) (f1 d2)]
+        face2-p [(f2 d1) (f2 d2)]
+        face-seg [face1-p face2-p]
+        intersect (line-segment-intersect arm-seg face-seg)]
+    intersect))
+
 (defn arm-face-intersect [arm face-abs]
   ;; facing down, towards y-axis
   ;; Get x-z coords from face points
-  (let [[a1 a2] arm
-        arm1-xz [(a1 0) (a1 2)]
-        arm2-xz [(a2 0) (a2 2)]
-        arm-xz-line [arm1-xz arm2-xz]
-        arm1-xy [(a1 0) (a1 1)]
-        arm2-xy [(a2 0) (a2 1)]
-        arm-xy-line [arm1-xy arm2-xy]
-        [f1 f2] face-abs
-        face1-xz [(f1 0) (f1 2)]
-        face2-xz [(f2 0) (f2 2)]
-        face-xz-line [face1-xz face2-xz]
-        face1-xy [(f1 0) (f1 1)]
-        face2-xy [(f2 0) (f2 1)]
-        face-xy-line [face1-xy face2-xy]
-        i-xz (line-segment-intersect arm-xz-line face-xz-line)
-        i-xy (line-segment-intersect arm-xy-line face-xy-line)]
+  (let [i-xy (arm-face-intersect-2d arm face-abs 0 1)
+        _ (println "i-xy:" i-xy)
+        i-xz (arm-face-intersect-2d arm face-abs 0 2)
+        _ (println "i-xz:" i-xz)
+        i-yz (arm-face-intersect-2d arm face-abs 1 2)
+        _ (println "i-yz:" i-yz)]
     (and i-xz
          i-xy
+         i-yz
          [(i-xz 0) (i-xy 1) (i-xz 1)])))
 
 (def HALF_WIDTH (float 0.5))
@@ -138,36 +141,26 @@
   (map #(math/add (math/sub block-pos HALF_WIDTH_VECTOR) %)
        face-rel))
 
-(defn faces-old [pos half-width]
-  "Location of faces for a given block"
-  (let [[x y z] pos
-        hw half-width]
-      [;; back -z
-       [[(- x hw) (- y hw) (- z hw)] [(+ x hw) (+ y hw) (- z hw)]]
-       ;; bottom
-       [[(- x hw) (- y hw) (- z hw)] [(+ x hw) (- y hw) (+ z hw)]]
-       ;; side -x
-       [[(- x hw) (- y hw) (- z hw)] [(- x hw) (+ y hw) (+ z hw)]]
-
-       ;; front +z
-       [[(- x hw) (- y hw) (+ z hw)] [(+ x hw) (+ y hw) (+ z hw)]]
-       ;; top
-       [[(- x hw) (+ y hw) (- z hw)] [(+ x hw) (+ y hw) (+ z hw)]]
-       ;; side +x
-       [[(+ x hw) (- y hw) (- z hw)] [(+ x hw) (+ y hw) (+ z hw)]]]))
-
 (def FACES
   "Description of block faces, relative to origin (0 0 0)"
+  ;; Back -z
   [[[0.0 0.0 0.0] [1.0 1.0 0.0]]
+   ;; Bottom
    [[0.0 0.0 0.0] [1.0 0.0 1.0]]
+   ;; Side -x
    [[0.0 0.0 0.0] [0.0 1.0 1.0]]
+   ;; Front +z
    [[0.0 0.0 1.0] [1.0 1.0 1.0]]
+   ;; Top +y
    [[0.0 1.0 0.0] [1.0 1.0 1.0]]
+   ;; Side +x
    [[1.0 0.0 0.0] [1.0 1.0 1.0]]])
 
-(defn arm-block-intersects [arm block-pos faces-col]
-  (map #(arm-face-intersect arm (face-abs block-pos %))
-       faces-col))
+(defn arm-block-intersects
+  ([arm block-pos] (arm-block-intersects arm block-pos FACES))
+  ([arm block-pos FACES]
+     (map #(arm-face-intersect arm (face-abs block-pos %))
+          FACES)))
 
 (defn closest-intersection [block-pos arm]
   (let [[p1 p2] arm

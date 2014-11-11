@@ -166,12 +166,15 @@
     (when (input/key-down-event :1)
       (models/add-block [0.5 0.5 0.5]))))
 
+(defn intersections [block-positions arm]
+  (map (fn [pos]
+         (let [intersection (model.block/closest-intersection pos arm)]
+           (assoc (or intersection {}) :block-position pos)))
+       block-positions))
+
 (defn closest-pointed-face [block-positions arm]
-  (let [intersections (map (fn [pos]
-                             (let [intersection (model.block/closest-intersection pos arm)]
-                               (assoc (or intersection {}) :block-position pos)))
-                           block-positions)
-        matching-intersections (filter :intersect intersections)
+  (let [-intersections (intersections block-positions arm)
+        matching-intersections (filter :intersect -intersections)
         closer (fn [a b]
                  (cond
                   (and a b)
@@ -202,7 +205,10 @@
     (let [[key down? repeat?] (map #(event %) [:key :down? :repeat?])]
       (cond
        (= :g key) (input/set-mouse-grabbed true)
-       (= :r key) (input/set-mouse-grabbed false)))))
+       (= :r key) (input/set-mouse-grabbed false)
+       (= :2 key) (let [arm (model.player/arm @models/player)
+                        positions (map model.block/position @models/blocks)]
+                    (println "arm:" arm ", intersections:" (intersections positions arm)))))))
 
 (defn frame [delta]
   (handle-input delta)
