@@ -7,8 +7,8 @@
             [try-lwjgl.display.util :as util]
             [clojure.java.io :as io]))
 
-(def WIDTH 800)
-(def HEIGHT 600)
+(def WIDTH 1024)
+(def HEIGHT 768)
 
 (defn setup-opengl [width height title]
   (Display/setDisplayMode (DisplayMode. width height))
