@@ -124,15 +124,12 @@
   ;; facing down, towards y-axis
   ;; Get x-z coords from face points
   (let [i-xy (arm-face-intersect-2d arm face-abs 0 1)
-        _ (println "i-xy:" i-xy)
         i-xz (arm-face-intersect-2d arm face-abs 0 2)
-        _ (println "i-xz:" i-xz)
-        i-yz (arm-face-intersect-2d arm face-abs 1 2)
-        _ (println "i-yz:" i-yz)]
+        i-zy (arm-face-intersect-2d arm face-abs 2 1)]
     (and i-xz
          i-xy
-         i-yz
-         [(i-xz 0) (i-xy 1) (i-xz 1)])))
+         i-zy
+         [(i-xz 0) (i-xy 1) (i-zy 0)])))
 
 (def HALF_WIDTH (float 0.5))
 (def HALF_WIDTH_VECTOR [HALF_WIDTH HALF_WIDTH HALF_WIDTH])

@@ -43,12 +43,18 @@
   (let [arm [[0.5 1.0 2.5] [0.5 0.5 0.5]]
         face [[0.0 1.0 0.0] [1.0 1.0 1.0]]]
     (is (= nil (model.block/arm-face-intersect arm face))))
-)
+
+    (let [arm [[0.5 1.0 1.5] [0.5 0.5 0.5]]
+          face [[0.0 0.0 1.0] [1.0 1.0 1.0]]]
+      (is (= [0.5 0.5] (model.block/arm-face-intersect-2d arm face 0 1)))
+      (is (= [0.5 1.0] (model.block/arm-face-intersect-2d arm face 0 2)))
+      (is (= [1.0 0.75] (model.block/arm-face-intersect-2d arm face 2 1)))
+      (is (= [0.5 0.75 1.0] (model.block/arm-face-intersect arm face)))))
 
 (deftest arm-block-intersects-test
   (let [block-pos [0.5 0.5 0.5]
         arm [[0.5 -0.5 0.5] [0.5 1.5 0.5]]
-        intersects (model.block/arm-block-intersects arm block-pos model.block/FACES)]
+        intersects (model.block/arm-block-intersects arm block-pos)]
     (is (= [nil [0.5 0.0 0.5] nil nil [0.5 1.0 0.5] nil] intersects)))
   (let [block-pos [0.5 0.5 0.5]
         arm [[0.5 1.0 2.5] [0.5 0.5 0.5]]
