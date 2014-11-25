@@ -104,9 +104,9 @@
    :else
    nil))
 
-(defn line-segment-intersect [seg1 seg2]
-  (let [intersect (line-intersect seg1 seg2)]
-    (constrain-intersect intersect seg1 seg2)))
+(defn line-segment-intersect [seg1 rect]
+  (let [intersect (line-intersect seg1 rect)]
+    (constrain-intersect intersect seg1 rect)))
 
 (defn arm-face-intersect-2d [arm face-abs d1 d2]
   (let [[a1 a2] arm
@@ -170,7 +170,7 @@
                              (and fia fib)
                              (let [a (:intersect fia)
                                    b (:intersect fib)
-                                   cp (math/closer-point-3d p1 a b)]
+                                   cp (math/min-distance p1 [a b])]
                                (if (= cp a) fia fib))
 
                              fia fia

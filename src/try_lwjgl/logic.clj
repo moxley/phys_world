@@ -179,7 +179,7 @@
                  (cond
                   (and a b)
                   (let [[ia ib] (map :intersect [a b])
-                        cp (math/closer-point-3d (arm 0) ia ib)]
+                        cp (math/min-distance (arm 0) [ia ib])]
                     (if (= cp ia) a b))
                   a a
                   b b
