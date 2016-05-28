@@ -104,32 +104,41 @@
    :else
    nil))
 
-(defn line-segment-intersect [seg1 rect]
-  (let [intersect (line-intersect seg1 rect)]
-    (constrain-intersect intersect seg1 rect)))
+(defn find-third-face-vertice [vert1 vert2]
+  "Given vertices of opposite corners of a block face, return a third vertice of the face"
+  (let [;; Indices where vert1 and vert2 differ
+        ;; Ex: vert1: [3 3 3 3], vert2: [3 3 4 5].
+        ;;     They differ at indices 2 and 3: (false, false, 2, 3)
+        indices-where-components-differ (map (fn [c1 c2 i] (and (not= c1 c2) i))
+                                             vert1
+                                             vert2
+                                             (iterate inc 0))
 
-(defn arm-face-intersect-2d [arm face-abs d1 d2]
-  (let [[a1 a2] arm
-        arm1-p [(a1 d1) (a1 d2)]
-        arm2-p [(a2 d1) (a2 d2)]
-        arm-seg [arm1-p arm2-p]
-        [f1 f2] face-abs
-        face1-p [(f1 d1) (f1 d2)]
-        face2-p [(f2 d1) (f2 d2)]
-        face-seg [face1-p face2-p]
-        intersect (line-segment-intersect arm-seg face-seg)]
-    intersect))
+        ;; The index of the first difference
+        diff-at (first (filter identity indices-where-components-differ))
+        vert3 (and diff-at (assoc (vec vert1) diff-at ((vec vert2) diff-at)))]
+    vert3))
+
+(defn face-normal [vert1 vert2]
+  "Given vertices of opposite corners of block face, return the plane normal for the face"
+  (let [vert3 (find-third-face-vertice vert1 vert2)]
+    (math/plane-normal vert1 vert2 vert3)))
 
 (defn arm-face-intersect [arm face-abs]
-  ;; facing down, towards y-axis
-  ;; Get x-z coords from face points
-  (let [i-xy (arm-face-intersect-2d arm face-abs 0 1)
-        i-xz (arm-face-intersect-2d arm face-abs 0 2)
-        i-zy (arm-face-intersect-2d arm face-abs 2 1)]
-    (and i-xz
-         i-xy
-         i-zy
-         [(i-xz 0) (i-xy 1) (i-zy 0)])))
+  (let [line-point (first arm)
+        line-direction (apply math/sub arm)
+        line [line-point line-direction]
+        face-abs (vec (map vec face-abs))
+        plane-point (vec (first face-abs))
+        ;; plane-point (first face-abs)
+        normal (vec (apply face-normal face-abs))
+        ;; (try
+        ;;   (vec (apply face-normal face-abs))
+        ;;   (catch Exception e
+        ;;     (println "Exception raised. arm:" arm ", face-abs:" face-abs)
+        ;;     (throw e)))
+        plane [plane-point normal]]
+    (math/line-plane-intersect line plane)))
 
 (def HALF_WIDTH (float 0.5))
 (def HALF_WIDTH_VECTOR [HALF_WIDTH HALF_WIDTH HALF_WIDTH])
@@ -156,8 +165,12 @@
 (defn arm-block-intersects
   ([arm block-pos] (arm-block-intersects arm block-pos FACES))
   ([arm block-pos FACES]
-     (map #(arm-face-intersect arm (face-abs block-pos %))
-          FACES)))
+     (try
+       (vec (map #(arm-face-intersect arm (face-abs block-pos %))
+                 FACES))
+       (catch Exception e
+         (println "Exception in arm-block-intersects. arm:" arm ", block-pos:" block-pos)
+         (throw e)))))
 
 (defn closest-intersection [block-pos arm]
   (let [[p1 p2] arm
@@ -176,7 +189,13 @@
                              fia fia
                              fib fib
                              :else nil))
-        closest-fi (reduce closer nil matching-faces-intersects)]
+        closest-fi (and (first matching-faces-intersects)
+                        (try
+                          (reduce closer nil matching-faces-intersects)
+                          (catch Exception e
+                            (println "Exception raised. matching-faces-intersects:" matching-faces-intersects)
+                            (throw e))))
+        ]
     closest-fi))
 
 (defn graph-position [block]

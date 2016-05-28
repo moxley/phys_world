@@ -94,9 +94,17 @@
   "Translate point v by negative vector distance"
   (map - pos distance))
 
-(defn scale [v distance]
-  "Multiply point v by scalar distance"
-  (map #(* % distance) v))
+(defn mul [a b]
+  "Multiply two vectors"
+  (map * a b))
+
+(defn div [a b]
+  "Divide two vectors"
+  (map / a b))
+
+(defn scale [v m]
+  "Multiply vector v by scalar magnitude m"
+  (map #(* % m) v))
 
 (defn square [a]
   (* a a))
@@ -104,8 +112,19 @@
 (defn sqrt [a]
   (Math/sqrt (double a)))
 
+(defn dot [a b]
+  (try
+    (reduce + (map * a b))
+    (catch Exception e
+      (println "dot: a:" a ", b:" b)
+      (throw e))))
+
 (defn v-dist [v]
   "Vector distance"
+  (sqrt (reduce + (map square v))))
+
+(defn magnitude [v]
+  "Vector magnitude/distance"
   (sqrt (reduce + (map square v))))
 
 (defn distance [point-a point-b]
@@ -116,3 +135,61 @@
   "From a subject point, determines the closest of the other points"
   (let [distances (map #(distance point %) other-points)]
     (apply min distances)))
+
+(defn unit [v]
+  "Calculate unit vector of the given vector"
+  (let [m (magnitude v)]
+    (if (= 0 m) 0
+        (div v (repeat m)))))
+
+(defn coefficient [e1 e2 e3 e4]
+  (- (* e1 e4) (* e2 e3)))
+
+(defn cross [a b]
+  "Cross product of two 3D vectors"
+  (let [[a1 a2 a3] a
+        [b1 b2 b3] b
+        x (coefficient a2 a3 b2 b3)
+        y (coefficient a1 a3 b1 b3)
+        z (coefficient a1 a2 b1 b2)
+        vx (mul [1 0 0] (repeat x))
+        vy (mul [0 1 0] (repeat y))
+        vz (mul [0 0 1] (repeat z))]
+    (add (sub vx vy) vz)))
+
+(defn plane-normal [p1 p2 p3]
+  "Given three different points on a plane forming a 'v' shape, with p1 being the middle vertice, and angle theta between p1p2 and p1p3 being positive, return the plane normal vector"
+  (let [v1 (sub p2 p1)
+        v2 (sub p3 p1)]
+    (unit (cross v1 v2))))
+
+(defn line-plane-intersect [line plane]
+  (let [[line-point line-direction] (map vec line)
+        [plane-point plane-normal] (map vec plane)
+        line-dot-normal (dot line-direction plane-normal)]
+    (if
+        ;; If line-dot-normal is zero, then plane and line are parallel
+        (= 0 line-dot-normal) nil
+        ;; Else, there is intersection
+        (add (mul (repeat (/ (dot
+                                ;; (sub plane-point line-point)
+
+                              (try
+                                (sub plane-point line-point)
+                                (catch Exception e
+                                  (println "Exception in (sub plane-point line-point). plane-point:" plane-point ", line-point:" line-point)
+                                  (throw e)))
+                              plane-normal)
+                             line-dot-normal))
+                  line-direction)
+             line-point))))
+
+;; (let [line-point-1 [0 1 2]
+;;       line-point-2 [1 0 0]
+;;       line-direction (sub line-point-2 line-point-1)
+;;       line [line-point-1 line-direction]
+;;       plane-point [0 0 1]
+;;       plane-normal [0 0 1]
+;;       plane [plane-point plane-normal]
+;;       intersect (line-plane-intersect line plane)]
+;;   intersect)
