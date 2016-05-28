@@ -1,16 +1,31 @@
 # phys_world
 
-FIXME: description
+An exploration of first-person 3D game programming, in Clojure.
+
+In this "game", you can push a large, florescent grid-looking ball around the ground,
+or drop a block out of thin air onto the ground and push that around. You can
+float and navigate to the top of the ball or block. You can add more blocks.
+You can build a tower of blocks and watch them teeter and fall.
 
 ## Installation
 
-Download from http://example.com/FIXME.
+Install Leinengen first.
 
 ## Usage
 
-FIXME: explanation
+Start by running: `lein run`
 
-    $ java -jar phys_world-0.1.0-standalone.jar [args]
+Use the mouse to look up, down, left, right.
+
+Press 'a' to shift (strife) to the left
+Press 'd' to shift (strife) to the right
+
+Press 'w' to move forward
+Press 's' to move backward
+
+Hold the spacebar to slowly float upwards.
+
+Press '1' to drop a block onto the ground.
 
 ## Options
 
