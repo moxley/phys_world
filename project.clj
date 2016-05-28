@@ -1,5 +1,5 @@
-(defproject try_lwjgl "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
+(defproject phys_world "0.1.0-SNAPSHOT"
+  :description "A first-person exploration un-game"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -12,6 +12,6 @@
                  [org.clojars.charles-stain/jbullet "3.0"]
                  [org.clojars.nakkaya/vecmath "1"]]
 
-  :main ^:skip-aot try-lwjgl.core
+  :main ^:skip-aot phys-world.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})

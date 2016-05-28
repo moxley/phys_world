@@ -1,4 +1,4 @@
-# try_lwjgl
+# phys_world
 
 FIXME: description
 
@@ -10,7 +10,7 @@ Download from http://example.com/FIXME.
 
 FIXME: explanation
 
-    $ java -jar try_lwjgl-0.1.0-standalone.jar [args]
+    $ java -jar phys_world-0.1.0-standalone.jar [args]
 
 ## Options
 
