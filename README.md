@@ -1,5 +1,7 @@
 # phys_world
 
+http://cl.ly/0m0I1k1n2R0Z/phys-world.png
+
 An exploration of first-person 3D game programming, in Clojure.
 
 In this "game", you can push a large, florescent grid-looking ball around the ground,
