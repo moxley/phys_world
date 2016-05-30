@@ -1,6 +1,6 @@
 # phys_world
 
-http://cl.ly/0m0I1k1n2R0Z/phys-world.png
+![phys world screenshot](http://cl.ly/0m0I1k1n2R0Z/phys-world.png "Phys World screenshot")
 
 An exploration of first-person 3D game programming, in Clojure.
 
