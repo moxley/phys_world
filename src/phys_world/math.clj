@@ -163,33 +163,32 @@
         v2 (sub p3 p1)]
     (unit (cross v1 v2))))
 
+;; Exception in arm-block-intersects. arm: [[-2.0 1.0003642 10.0] [-2.0000000000000004 1.0003641843795776 8.0]] , block-pos: [0.57275206 0.45745423 0.57275176]
+
 (defn line-plane-intersect [line plane]
+  "Returns the intersect between the given line segment and a given plane.
+
+  'line' is a line segment represented as the starting point within the segment,
+  and a vector representing the direction and length
+  of the segment. Example: `[[0,1,0], [0,-1,0]]`.
+
+  'plane' is represented as a 3D point on the plane
+  and a unit vector representing the plane normal. Example: `[[0,0,0], [0,1,0]]`"
   (let [[line-point line-direction] (map vec line)
         [plane-point plane-normal] (map vec plane)
         line-dot-normal (dot line-direction plane-normal)]
     (if
         ;; If line-dot-normal is zero, then plane and line are parallel
-        (= 0 line-dot-normal) nil
+        (= 0.0 line-dot-normal) nil
+
         ;; Else, there is intersection
-        (add (mul (repeat (/ (dot
-                                ;; (sub plane-point line-point)
-
-                              (try
-                                (sub plane-point line-point)
-                                (catch Exception e
-                                  (println "Exception in (sub plane-point line-point). plane-point:" plane-point ", line-point:" line-point)
-                                  (throw e)))
-                              plane-normal)
-                             line-dot-normal))
-                  line-direction)
-             line-point))))
-
-;; (let [line-point-1 [0 1 2]
-;;       line-point-2 [1 0 0]
-;;       line-direction (sub line-point-2 line-point-1)
-;;       line [line-point-1 line-direction]
-;;       plane-point [0 0 1]
-;;       plane-normal [0 0 1]
-;;       plane [plane-point plane-normal]
-;;       intersect (line-plane-intersect line plane)]
-;;   intersect)
+        (->
+          (repeat
+            (/
+              ;; If this is zero, the line is contained within the plane
+              (dot
+                (sub plane-point line-point)
+                plane-normal)
+              line-dot-normal))
+          (mul line-direction)
+          (add line-point)))))
