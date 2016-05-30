@@ -127,4 +127,4 @@
 ;;
 
 (defn init []
-  (set-mouse-grabbed false))
+  (set-mouse-grabbed true))
